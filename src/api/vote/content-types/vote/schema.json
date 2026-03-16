@@ -1,0 +1,42 @@
+{
+  "kind": "collectionType",
+  "collectionName": "votes",
+  "info": {
+    "singularName": "vote",
+    "pluralName": "votes",
+    "displayName": "Vote",
+    "description": "Votos emitidos"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "mechanism": {
+      "type": "enumeration",
+      "enum": [
+        "electronic",
+        "in_person",
+        "proxy",
+        "correspondence"
+      ],
+      "default": "electronic",
+      "required": true
+    },
+    "weight": {
+      "type": "decimal",
+      "required": true
+    },
+    "user": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "plugin::users-permissions.user"
+    },
+    "vote_option": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::vote-option.vote-option",
+      "inversedBy": "votes"
+    }
+  }
+}

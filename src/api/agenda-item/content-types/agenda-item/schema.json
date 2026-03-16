@@ -1,0 +1,49 @@
+{
+  "kind": "collectionType",
+  "collectionName": "agenda_items",
+  "info": {
+    "singularName": "agenda-item",
+    "pluralName": "agenda-items",
+    "displayName": "Agenda Item",
+    "description": "Puntos del orden del día"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "title": {
+      "type": "string",
+      "required": true
+    },
+    "description": {
+      "type": "richtext"
+    },
+    "requiresSpecialMajority": {
+      "type": "boolean",
+      "default": false
+    },
+    "status": {
+      "type": "enumeration",
+      "enum": [
+        "pending",
+        "open",
+        "closed"
+      ],
+      "default": "pending",
+      "required": true
+    },
+    "assembly": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::assembly.assembly",
+      "inversedBy": "agenda_items"
+    },
+    "vote_options": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::vote-option.vote-option",
+      "mappedBy": "agenda_item"
+    }
+  }
+}

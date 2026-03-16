@@ -1,0 +1,57 @@
+{
+  "kind": "collectionType",
+  "collectionName": "assemblies",
+  "info": {
+    "singularName": "assembly",
+    "pluralName": "assemblies",
+    "displayName": "Assembly",
+    "description": "Asambleas de copropietarios"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "title": {
+      "type": "string",
+      "required": true
+    },
+    "date": {
+      "type": "datetime",
+      "required": true
+    },
+    "status": {
+      "type": "enumeration",
+      "enum": [
+        "scheduled",
+        "in_progress",
+        "finished"
+      ],
+      "default": "scheduled",
+      "required": true
+    },
+    "documents": {
+      "type": "media",
+      "multiple": true,
+      "required": false,
+      "allowedTypes": [
+        "files",
+        "images",
+        "videos",
+        "audios"
+      ]
+    },
+    "agenda_items": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::agenda-item.agenda-item",
+      "mappedBy": "assembly"
+    },
+    "attendances": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::attendance.attendance",
+      "mappedBy": "assembly"
+    }
+  }
+}

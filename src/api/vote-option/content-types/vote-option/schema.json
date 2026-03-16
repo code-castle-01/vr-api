@@ -1,0 +1,32 @@
+{
+  "kind": "collectionType",
+  "collectionName": "vote_options",
+  "info": {
+    "singularName": "vote-option",
+    "pluralName": "vote-options",
+    "displayName": "Vote Option",
+    "description": "Opciones de votación"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "text": {
+      "type": "string",
+      "required": true
+    },
+    "agenda_item": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::agenda-item.agenda-item",
+      "inversedBy": "vote_options"
+    },
+    "votes": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::vote.vote",
+      "mappedBy": "vote_option"
+    }
+  }
+}
