@@ -391,6 +391,8 @@ export interface ApiAgendaItemAgendaItem extends Schema.CollectionType {
     status: Attribute.Enumeration<['pending', 'open', 'closed']> &
       Attribute.Required &
       Attribute.DefaultTo<'pending'>;
+    survey_locale: Attribute.String & Attribute.DefaultTo<'es'>;
+    survey_schema: Attribute.JSON;
     title: Attribute.String & Attribute.Required;
     updatedAt: Attribute.DateTime;
     updatedBy: Attribute.Relation<

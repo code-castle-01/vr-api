@@ -55,6 +55,7 @@ type AgendaItemListEntity = {
     status?: 'scheduled' | 'in_progress' | 'finished' | null;
     title?: string | null;
   } | null;
+  description?: string | null;
   id: number;
   requiresSpecialMajority?: boolean | null;
   status?: 'pending' | 'open' | 'closed';
@@ -162,7 +163,7 @@ export default factories.createCoreService('api::vote.vote', ({ strapi }) => {
 
       const agendaItems = currentAssembly
         ? ((await strapi.entityService.findMany('api::agenda-item.agenda-item', {
-            fields: ['id', 'title', 'status', 'requiresSpecialMajority', 'survey_locale', 'survey_schema'],
+            fields: ['id', 'title', 'description', 'status', 'requiresSpecialMajority', 'survey_locale', 'survey_schema'],
             filters: {
               assembly: {
                 id: currentAssembly.id,
@@ -268,6 +269,7 @@ export default factories.createCoreService('api::vote.vote', ({ strapi }) => {
                   title: agendaItem.assembly.title ?? null,
                 }
               : null,
+            description: agendaItem.description ?? null,
             existingVote,
             id: agendaItem.id,
             options:
