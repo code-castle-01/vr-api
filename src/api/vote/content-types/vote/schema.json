@@ -32,6 +32,11 @@
       "relation": "manyToOne",
       "target": "plugin::users-permissions.user"
     },
+    "agenda_item": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::agenda-item.agenda-item"
+    },
     "vote_option": {
       "type": "relation",
       "relation": "manyToOne",

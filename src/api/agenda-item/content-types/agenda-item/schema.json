@@ -19,6 +19,13 @@
     "description": {
       "type": "richtext"
     },
+    "survey_schema": {
+      "type": "json"
+    },
+    "survey_locale": {
+      "type": "string",
+      "default": "es"
+    },
     "requiresSpecialMajority": {
       "type": "boolean",
       "default": false

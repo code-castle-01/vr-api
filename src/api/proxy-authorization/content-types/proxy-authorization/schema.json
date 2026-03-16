@@ -1,0 +1,49 @@
+{
+  "kind": "collectionType",
+  "collectionName": "proxy_authorizations",
+  "info": {
+    "singularName": "proxy-authorization",
+    "pluralName": "proxy-authorizations",
+    "displayName": "Proxy Authorization",
+    "description": "Poderes de representacion para la asamblea"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "submitted_by": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "plugin::users-permissions.user"
+    },
+    "represented_user": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "plugin::users-permissions.user"
+    },
+    "support_document": {
+      "type": "media",
+      "multiple": false,
+      "required": false,
+      "allowedTypes": [
+        "images",
+        "files"
+      ]
+    },
+    "status": {
+      "type": "enumeration",
+      "enum": [
+        "submitted"
+      ],
+      "default": "submitted",
+      "required": true
+    },
+    "assembly": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::assembly.assembly",
+      "inversedBy": "proxy_authorizations"
+    }
+  }
+}

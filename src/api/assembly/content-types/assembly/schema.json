@@ -52,6 +52,12 @@
       "relation": "oneToMany",
       "target": "api::attendance.attendance",
       "mappedBy": "assembly"
+    },
+    "proxy_authorizations": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::proxy-authorization.proxy-authorization",
+      "mappedBy": "assembly"
     }
   }
 }

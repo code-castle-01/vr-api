@@ -438,6 +438,11 @@ export interface ApiAssemblyAssembly extends Schema.CollectionType {
       Attribute.Private;
     date: Attribute.DateTime & Attribute.Required;
     documents: Attribute.Media<'files' | 'images' | 'videos' | 'audios', true>;
+    proxy_authorizations: Attribute.Relation<
+      'api::assembly.assembly',
+      'oneToMany',
+      'api::proxy-authorization.proxy-authorization'
+    >;
     status: Attribute.Enumeration<['scheduled', 'in_progress', 'finished']> &
       Attribute.Required &
       Attribute.DefaultTo<'scheduled'>;
@@ -568,6 +573,55 @@ export interface ApiCategoryCategory extends Schema.CollectionType {
   };
 }
 
+export interface ApiProxyAuthorizationProxyAuthorization
+  extends Schema.CollectionType {
+  collectionName: 'proxy_authorizations';
+  info: {
+    description: 'Poderes de representacion para la asamblea';
+    displayName: 'Proxy Authorization';
+    pluralName: 'proxy-authorizations';
+    singularName: 'proxy-authorization';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    assembly: Attribute.Relation<
+      'api::proxy-authorization.proxy-authorization',
+      'manyToOne',
+      'api::assembly.assembly'
+    >;
+    createdAt: Attribute.DateTime;
+    createdBy: Attribute.Relation<
+      'api::proxy-authorization.proxy-authorization',
+      'oneToOne',
+      'admin::user'
+    > &
+      Attribute.Private;
+    represented_user: Attribute.Relation<
+      'api::proxy-authorization.proxy-authorization',
+      'manyToOne',
+      'plugin::users-permissions.user'
+    >;
+    status: Attribute.Enumeration<['submitted']> &
+      Attribute.Required &
+      Attribute.DefaultTo<'submitted'>;
+    submitted_by: Attribute.Relation<
+      'api::proxy-authorization.proxy-authorization',
+      'manyToOne',
+      'plugin::users-permissions.user'
+    >;
+    support_document: Attribute.Media<'images' | 'files'>;
+    updatedAt: Attribute.DateTime;
+    updatedBy: Attribute.Relation<
+      'api::proxy-authorization.proxy-authorization',
+      'oneToOne',
+      'admin::user'
+    > &
+      Attribute.Private;
+  };
+}
+
 export interface ApiVoteOptionVoteOption extends Schema.CollectionType {
   collectionName: 'vote_options';
   info: {
@@ -620,6 +674,11 @@ export interface ApiVoteVote extends Schema.CollectionType {
     draftAndPublish: false;
   };
   attributes: {
+    agenda_item: Attribute.Relation<
+      'api::vote.vote',
+      'manyToOne',
+      'api::agenda-item.agenda-item'
+    >;
     createdAt: Attribute.DateTime;
     createdBy: Attribute.Relation<'api::vote.vote', 'oneToOne', 'admin::user'> &
       Attribute.Private;
@@ -1028,12 +1087,10 @@ export interface PluginUsersPermissionsUser extends Schema.CollectionType {
     timestamps: true;
   };
   attributes: {
-    attendances: Attribute.Relation<
-      'plugin::users-permissions.user',
-      'oneToMany',
-      'api::attendance.attendance'
-    >;
+    blocked: Attribute.Boolean & Attribute.DefaultTo<false>;
     Coeficiente: Attribute.Decimal & Attribute.DefaultTo<100>;
+    confirmationToken: Attribute.String & Attribute.Private;
+    confirmed: Attribute.Boolean & Attribute.DefaultTo<false>;
     createdAt: Attribute.DateTime;
     createdBy: Attribute.Relation<
       'plugin::users-permissions.user',
@@ -1041,11 +1098,24 @@ export interface PluginUsersPermissionsUser extends Schema.CollectionType {
       'admin::user'
     > &
       Attribute.Private;
+    email: Attribute.Email &
+      Attribute.Required &
+      Attribute.SetMinMaxLength<{
+        minLength: 6;
+      }>;
     EstadoCartera: Attribute.Boolean & Attribute.DefaultTo<false>;
-    proxy_attendances: Attribute.Relation<
+    NombreCompleto: Attribute.String;
+    password: Attribute.Password &
+      Attribute.Private &
+      Attribute.SetMinMaxLength<{
+        minLength: 6;
+      }>;
+    provider: Attribute.String;
+    resetPasswordToken: Attribute.String & Attribute.Private;
+    role: Attribute.Relation<
       'plugin::users-permissions.user',
-      'oneToMany',
-      'api::attendance.attendance'
+      'manyToOne',
+      'plugin::users-permissions.role'
     >;
     UnidadPrivada: Attribute.String;
     updatedAt: Attribute.DateTime;
@@ -1055,11 +1125,12 @@ export interface PluginUsersPermissionsUser extends Schema.CollectionType {
       'admin::user'
     > &
       Attribute.Private;
-    votes: Attribute.Relation<
-      'plugin::users-permissions.user',
-      'oneToMany',
-      'api::vote.vote'
-    >;
+    username: Attribute.String &
+      Attribute.Required &
+      Attribute.Unique &
+      Attribute.SetMinMaxLength<{
+        minLength: 3;
+      }>;
   };
 }
 
@@ -1078,6 +1149,7 @@ declare module '@strapi/types' {
       'api::attendance.attendance': ApiAttendanceAttendance;
       'api::blog-post.blog-post': ApiBlogPostBlogPost;
       'api::category.category': ApiCategoryCategory;
+      'api::proxy-authorization.proxy-authorization': ApiProxyAuthorizationProxyAuthorization;
       'api::vote-option.vote-option': ApiVoteOptionVoteOption;
       'api::vote.vote': ApiVoteVote;
       'plugin::content-releases.release': PluginContentReleasesRelease;

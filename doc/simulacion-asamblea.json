@@ -1,0 +1,552 @@
+{
+  "generatedAt": "2026-03-16T16:20:28.332Z",
+  "assembly": {
+    "id": 4,
+    "title": "[SIMULACION] Asamblea integral 2026-03-16 16:20"
+  },
+  "demoUsers": [
+    {
+      "email": "sim-01@sim.vegasdelrio.com",
+      "fullName": "Lizarazo Demo Principal",
+      "password": "Simulacion-2026!",
+      "unit": "SIM-01",
+      "username": "SIM-01"
+    },
+    {
+      "email": "sim-02@sim.vegasdelrio.com",
+      "fullName": "Rubio Demo Representada",
+      "password": "Simulacion-2026!",
+      "unit": "SIM-02",
+      "username": "SIM-02"
+    },
+    {
+      "email": "sim-03@sim.vegasdelrio.com",
+      "fullName": "Rozo Demo Representado",
+      "password": "Simulacion-2026!",
+      "unit": "SIM-03",
+      "username": "SIM-03"
+    },
+    {
+      "email": "sim-04@sim.vegasdelrio.com",
+      "fullName": "Martinez Demo Votante",
+      "password": "Simulacion-2026!",
+      "unit": "SIM-04",
+      "username": "SIM-04"
+    },
+    {
+      "email": "sim-05@sim.vegasdelrio.com",
+      "fullName": "Castro Demo Votante",
+      "password": "Simulacion-2026!",
+      "unit": "SIM-05",
+      "username": "SIM-05"
+    },
+    {
+      "email": "sim-06@sim.vegasdelrio.com",
+      "fullName": "Hernandez Demo Votante",
+      "password": "Simulacion-2026!",
+      "unit": "SIM-06",
+      "username": "SIM-06"
+    }
+  ],
+  "frontendUrls": {
+    "adminAssemblyDetail": "http://localhost:5173/assemblies/show/4",
+    "login": "http://localhost:5173/login",
+    "residentProxyCenter": "http://localhost:5173/representacion",
+    "residentSurveys": "http://localhost:5173/encuestas"
+  },
+  "recommendations": [
+    "Ingresa con SIM-01 para revisar el flujo de poderes y el peso de voto acumulado.",
+    "Ingresa con SIM-04 para revisar un votante directo sin poderes.",
+    "Ingresa con un usuario administrador existente para validar la vista administrativa."
+  ],
+  "resultsOverview": {
+    "assemblies": [
+      {
+        "date": "2026-03-16T16:20:25.800Z",
+        "id": 4,
+        "status": "in_progress",
+        "summary": {
+          "totalSurveys": 4,
+          "totalVotes": 12,
+          "totalWeight": 1860
+        },
+        "surveys": [
+          {
+            "id": 6,
+            "options": [
+              {
+                "id": 14,
+                "text": "Apruebo",
+                "totalVotes": 3,
+                "totalWeight": 530,
+                "isWinner": true,
+                "shareByVotes": 75,
+                "shareByWeight": 85.48387096774194
+              },
+              {
+                "id": 15,
+                "text": "No apruebo",
+                "totalVotes": 1,
+                "totalWeight": 90,
+                "isWinner": false,
+                "shareByVotes": 25,
+                "shareByWeight": 14.516129032258066
+              },
+              {
+                "id": 16,
+                "text": "Me abstengo",
+                "totalVotes": 0,
+                "totalWeight": 0,
+                "isWinner": false,
+                "shareByVotes": 0,
+                "shareByWeight": 0
+              }
+            ],
+            "requiresSpecialMajority": false,
+            "resultStatus": "closed",
+            "status": "closed",
+            "summary": {
+              "totalOptions": 3,
+              "totalVotes": 4,
+              "totalWeight": 620,
+              "winningOptionId": 14
+            },
+            "title": "Aprobacion del presupuesto anual 2026",
+            "winningOption": {
+              "id": 14,
+              "text": "Apruebo",
+              "totalVotes": 3,
+              "totalWeight": 530,
+              "isWinner": true,
+              "shareByVotes": 75,
+              "shareByWeight": 85.48387096774194
+            }
+          },
+          {
+            "id": 7,
+            "options": [
+              {
+                "id": 17,
+                "text": "Si autorizo",
+                "totalVotes": 2,
+                "totalWeight": 420,
+                "isWinner": true,
+                "shareByVotes": 50,
+                "shareByWeight": 67.74193548387096
+              },
+              {
+                "id": 18,
+                "text": "No autorizo",
+                "totalVotes": 2,
+                "totalWeight": 200,
+                "isWinner": false,
+                "shareByVotes": 50,
+                "shareByWeight": 32.25806451612903
+              },
+              {
+                "id": 19,
+                "text": "Me abstengo",
+                "totalVotes": 0,
+                "totalWeight": 0,
+                "isWinner": false,
+                "shareByVotes": 0,
+                "shareByWeight": 0
+              }
+            ],
+            "requiresSpecialMajority": true,
+            "resultStatus": "closed_without_threshold",
+            "status": "closed",
+            "summary": {
+              "totalOptions": 3,
+              "totalVotes": 4,
+              "totalWeight": 620,
+              "winningOptionId": 17
+            },
+            "title": "Autorizacion de cuota extraordinaria",
+            "winningOption": {
+              "id": 17,
+              "text": "Si autorizo",
+              "totalVotes": 2,
+              "totalWeight": 420,
+              "isWinner": true,
+              "shareByVotes": 50,
+              "shareByWeight": 67.74193548387096
+            }
+          },
+          {
+            "id": 8,
+            "options": [
+              {
+                "id": 20,
+                "text": "Plancha A",
+                "totalVotes": 2,
+                "totalWeight": 430,
+                "isWinner": true,
+                "shareByVotes": 50,
+                "shareByWeight": 69.35483870967742
+              },
+              {
+                "id": 21,
+                "text": "Plancha B",
+                "totalVotes": 1,
+                "totalWeight": 100,
+                "isWinner": false,
+                "shareByVotes": 25,
+                "shareByWeight": 16.129032258064516
+              },
+              {
+                "id": 22,
+                "text": "Voto en blanco",
+                "totalVotes": 1,
+                "totalWeight": 90,
+                "isWinner": false,
+                "shareByVotes": 25,
+                "shareByWeight": 14.516129032258066
+              }
+            ],
+            "requiresSpecialMajority": false,
+            "resultStatus": "leading",
+            "status": "open",
+            "summary": {
+              "totalOptions": 3,
+              "totalVotes": 4,
+              "totalWeight": 620,
+              "winningOptionId": 20
+            },
+            "title": "Eleccion del comite de convivencia",
+            "winningOption": {
+              "id": 20,
+              "text": "Plancha A",
+              "totalVotes": 2,
+              "totalWeight": 430,
+              "isWinner": true,
+              "shareByVotes": 50,
+              "shareByWeight": 69.35483870967742
+            }
+          },
+          {
+            "id": 9,
+            "options": [
+              {
+                "id": 23,
+                "text": "Leido",
+                "totalVotes": 0,
+                "totalWeight": 0,
+                "isWinner": false,
+                "shareByVotes": 0,
+                "shareByWeight": 0
+              },
+              {
+                "id": 24,
+                "text": "Requiere ajustes",
+                "totalVotes": 0,
+                "totalWeight": 0,
+                "isWinner": false,
+                "shareByVotes": 0,
+                "shareByWeight": 0
+              }
+            ],
+            "requiresSpecialMajority": false,
+            "resultStatus": "no_votes",
+            "status": "pending",
+            "summary": {
+              "totalOptions": 2,
+              "totalVotes": 0,
+              "totalWeight": 0,
+              "winningOptionId": null
+            },
+            "title": "Lectura del reglamento interno",
+            "winningOption": null
+          }
+        ],
+        "title": "[SIMULACION] Asamblea integral 2026-03-16 16:20"
+      }
+    ],
+    "generatedAt": "2026-03-16T16:20:28.300Z",
+    "summary": {
+      "closedSurveys": 2,
+      "distinctVoters": 4,
+      "openSurveys": 1,
+      "pendingSurveys": 1,
+      "totalAssemblies": 1,
+      "totalSurveys": 4,
+      "totalVotes": 12,
+      "totalWeight": 1860
+    }
+  },
+  "sampleBallots": {
+    "directVoter": {
+      "assembly": {
+        "date": "2026-03-16T16:20:25.800Z",
+        "id": 4,
+        "status": "in_progress",
+        "title": "[SIMULACION] Asamblea integral 2026-03-16 16:20"
+      },
+      "delegatedBy": null,
+      "resident": {
+        "id": 305,
+        "name": "Martinez Demo Votante",
+        "unit": "SIM-04"
+      },
+      "representedResidents": [],
+      "surveys": [
+        {
+          "assembly": {
+            "date": "2026-03-16T16:20:25.800Z",
+            "id": 4,
+            "title": "[SIMULACION] Asamblea integral 2026-03-16 16:20"
+          },
+          "existingVote": {
+            "id": 17,
+            "voteOptionId": 14,
+            "weight": 100
+          },
+          "id": 6,
+          "options": [
+            {
+              "id": 14,
+              "text": "Apruebo"
+            },
+            {
+              "id": 15,
+              "text": "No apruebo"
+            },
+            {
+              "id": 16,
+              "text": "Me abstengo"
+            }
+          ],
+          "requiresSpecialMajority": false,
+          "status": "closed",
+          "title": "Aprobacion del presupuesto anual 2026"
+        },
+        {
+          "assembly": {
+            "date": "2026-03-16T16:20:25.800Z",
+            "id": 4,
+            "title": "[SIMULACION] Asamblea integral 2026-03-16 16:20"
+          },
+          "existingVote": {
+            "id": 21,
+            "voteOptionId": 17,
+            "weight": 100
+          },
+          "id": 7,
+          "options": [
+            {
+              "id": 17,
+              "text": "Si autorizo"
+            },
+            {
+              "id": 18,
+              "text": "No autorizo"
+            },
+            {
+              "id": 19,
+              "text": "Me abstengo"
+            }
+          ],
+          "requiresSpecialMajority": true,
+          "status": "closed",
+          "title": "Autorizacion de cuota extraordinaria"
+        },
+        {
+          "assembly": {
+            "date": "2026-03-16T16:20:25.800Z",
+            "id": 4,
+            "title": "[SIMULACION] Asamblea integral 2026-03-16 16:20"
+          },
+          "existingVote": {
+            "id": 25,
+            "voteOptionId": 21,
+            "weight": 100
+          },
+          "id": 8,
+          "options": [
+            {
+              "id": 20,
+              "text": "Plancha A"
+            },
+            {
+              "id": 21,
+              "text": "Plancha B"
+            },
+            {
+              "id": 22,
+              "text": "Voto en blanco"
+            }
+          ],
+          "requiresSpecialMajority": false,
+          "status": "open",
+          "title": "Eleccion del comite de convivencia"
+        },
+        {
+          "assembly": {
+            "date": "2026-03-16T16:20:25.800Z",
+            "id": 4,
+            "title": "[SIMULACION] Asamblea integral 2026-03-16 16:20"
+          },
+          "id": 9,
+          "options": [
+            {
+              "id": 23,
+              "text": "Leido"
+            },
+            {
+              "id": 24,
+              "text": "Requiere ajustes"
+            }
+          ],
+          "requiresSpecialMajority": false,
+          "status": "pending",
+          "title": "Lectura del reglamento interno"
+        }
+      ],
+      "totalHomesRepresented": 1,
+      "totalWeightRepresented": 100
+    },
+    "representative": {
+      "assembly": {
+        "date": "2026-03-16T16:20:25.800Z",
+        "id": 4,
+        "status": "in_progress",
+        "title": "[SIMULACION] Asamblea integral 2026-03-16 16:20"
+      },
+      "delegatedBy": null,
+      "resident": {
+        "id": 302,
+        "name": "Lizarazo Demo Principal",
+        "unit": "SIM-01"
+      },
+      "representedResidents": [
+        {
+          "coefficient": 95,
+          "id": 303,
+          "name": "Rubio Demo Representada",
+          "unit": "SIM-02"
+        },
+        {
+          "coefficient": 105,
+          "id": 304,
+          "name": "Rozo Demo Representado",
+          "unit": "SIM-03"
+        }
+      ],
+      "surveys": [
+        {
+          "assembly": {
+            "date": "2026-03-16T16:20:25.800Z",
+            "id": 4,
+            "title": "[SIMULACION] Asamblea integral 2026-03-16 16:20"
+          },
+          "existingVote": {
+            "id": 16,
+            "voteOptionId": 14,
+            "weight": 320
+          },
+          "id": 6,
+          "options": [
+            {
+              "id": 14,
+              "text": "Apruebo"
+            },
+            {
+              "id": 15,
+              "text": "No apruebo"
+            },
+            {
+              "id": 16,
+              "text": "Me abstengo"
+            }
+          ],
+          "requiresSpecialMajority": false,
+          "status": "closed",
+          "title": "Aprobacion del presupuesto anual 2026"
+        },
+        {
+          "assembly": {
+            "date": "2026-03-16T16:20:25.800Z",
+            "id": 4,
+            "title": "[SIMULACION] Asamblea integral 2026-03-16 16:20"
+          },
+          "existingVote": {
+            "id": 20,
+            "voteOptionId": 17,
+            "weight": 320
+          },
+          "id": 7,
+          "options": [
+            {
+              "id": 17,
+              "text": "Si autorizo"
+            },
+            {
+              "id": 18,
+              "text": "No autorizo"
+            },
+            {
+              "id": 19,
+              "text": "Me abstengo"
+            }
+          ],
+          "requiresSpecialMajority": true,
+          "status": "closed",
+          "title": "Autorizacion de cuota extraordinaria"
+        },
+        {
+          "assembly": {
+            "date": "2026-03-16T16:20:25.800Z",
+            "id": 4,
+            "title": "[SIMULACION] Asamblea integral 2026-03-16 16:20"
+          },
+          "existingVote": {
+            "id": 24,
+            "voteOptionId": 20,
+            "weight": 320
+          },
+          "id": 8,
+          "options": [
+            {
+              "id": 20,
+              "text": "Plancha A"
+            },
+            {
+              "id": 21,
+              "text": "Plancha B"
+            },
+            {
+              "id": 22,
+              "text": "Voto en blanco"
+            }
+          ],
+          "requiresSpecialMajority": false,
+          "status": "open",
+          "title": "Eleccion del comite de convivencia"
+        },
+        {
+          "assembly": {
+            "date": "2026-03-16T16:20:25.800Z",
+            "id": 4,
+            "title": "[SIMULACION] Asamblea integral 2026-03-16 16:20"
+          },
+          "id": 9,
+          "options": [
+            {
+              "id": 23,
+              "text": "Leido"
+            },
+            {
+              "id": 24,
+              "text": "Requiere ajustes"
+            }
+          ],
+          "requiresSpecialMajority": false,
+          "status": "pending",
+          "title": "Lectura del reglamento interno"
+        }
+      ],
+      "totalHomesRepresented": 3,
+      "totalWeightRepresented": 320
+    }
+  }
+}
