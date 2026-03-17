@@ -17,6 +17,18 @@ type StrapiApp = {
     error: (message: string) => void;
     warn: (message: string) => void;
   };
+  server?: {
+    routes: (
+      routes: Array<{
+        method: string;
+        path: string;
+        handler: (ctx: { body?: unknown; status?: number; set: (name: string, value: string) => void }) => void;
+        config?: {
+          auth?: boolean;
+        };
+      }>
+    ) => void;
+  };
 };
 
 type AssemblyOwnerRow = {
@@ -308,7 +320,40 @@ const attachOrphanProxyAuthorizations = async (strapi: StrapiApp): Promise<void>
 };
 
 export default {
-  register() {},
+  register({ strapi }: { strapi: StrapiApp }) {
+    strapi.server?.routes([
+      {
+        method: 'GET',
+        path: '/',
+        handler: (ctx) => {
+          ctx.set('Content-Type', 'application/json; charset=utf-8');
+          ctx.body = {
+            ok: true,
+            service: 'vr-api',
+            message: 'API online',
+          };
+        },
+        config: {
+          auth: false,
+        },
+      },
+      {
+        method: 'GET',
+        path: '/health',
+        handler: (ctx) => {
+          ctx.set('Content-Type', 'application/json; charset=utf-8');
+          ctx.body = {
+            ok: true,
+            service: 'vr-api',
+            status: 'healthy',
+          };
+        },
+        config: {
+          auth: false,
+        },
+      },
+    ]);
+  },
 
   async bootstrap({ strapi }: { strapi: StrapiApp }) {
     const fs = require('fs');
