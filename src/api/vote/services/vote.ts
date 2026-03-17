@@ -9,7 +9,7 @@ type CastVoteInput = {
   agendaItemId: number;
   mechanism: VoteMechanism;
   userId: number;
-  voteOptionId: number;
+  voteOptionIds: number[];
 };
 
 type AssemblyEntity = {
@@ -22,6 +22,7 @@ type AssemblyEntity = {
 type AgendaItemEntity = {
   assembly?: {
     id: number;
+    status?: 'scheduled' | 'in_progress' | 'finished' | null;
   } | null;
   id: number;
   requiresSpecialMajority?: boolean;
@@ -83,10 +84,115 @@ type FlatVoteRow = {
   weight?: number | string | null;
 };
 
+type SurveyRecord = Record<string, unknown>;
+
 const parseNumericValue = (value: number | string | null | undefined) => {
   const numericValue = Number(value ?? 0);
 
   return Number.isFinite(numericValue) ? numericValue : 0;
+};
+
+const OFFICIAL_VOTE_QUESTION = 'official_vote';
+
+const isObjectRecord = (value: unknown): value is SurveyRecord =>
+  typeof value === 'object' && value !== null && !Array.isArray(value);
+
+const toTrimmedString = (value: unknown) =>
+  typeof value === 'string' ? value.trim() : '';
+
+const getResidentAgendaStatus = (
+  agendaStatus: 'pending' | 'open' | 'closed' | undefined,
+  assemblyStatus: 'scheduled' | 'in_progress' | 'finished' | null | undefined
+) => {
+  if (agendaStatus === 'closed') {
+    return 'closed' as const;
+  }
+
+  if (agendaStatus === 'open') {
+    return 'open' as const;
+  }
+
+  if (assemblyStatus === 'in_progress') {
+    return 'open' as const;
+  }
+
+  return 'pending' as const;
+};
+
+const findOfficialVoteContent = (
+  value: unknown,
+  context?: {
+    pageDescription?: string | null;
+    pageTitle?: string | null;
+  }
+):
+  | {
+      pageDescription?: string | null;
+      pageTitle?: string | null;
+      questionDescription?: string | null;
+      questionTitle?: string | null;
+    }
+  | null => {
+  if (Array.isArray(value)) {
+    for (const item of value) {
+      const found = findOfficialVoteContent(item, context);
+
+      if (found) {
+        return found;
+      }
+    }
+
+    return null;
+  }
+
+  if (!isObjectRecord(value)) {
+    return null;
+  }
+
+  const nextContext =
+    Array.isArray(value.elements) || Array.isArray(value.questions)
+      ? {
+          pageDescription: toTrimmedString(value.description) || context?.pageDescription,
+          pageTitle: toTrimmedString(value.title) || context?.pageTitle,
+        }
+      : context;
+
+  if (value.name === OFFICIAL_VOTE_QUESTION) {
+    return {
+      pageDescription: nextContext?.pageDescription ?? null,
+      pageTitle: nextContext?.pageTitle ?? null,
+      questionDescription: toTrimmedString(value.description) || null,
+      questionTitle: toTrimmedString(value.title) || null,
+    };
+  }
+
+  for (const nestedValue of Object.values(value)) {
+    const found = findOfficialVoteContent(nestedValue, nextContext);
+
+    if (found) {
+      return found;
+    }
+  }
+
+  return null;
+};
+
+const getOfficialVoteSummary = (
+  surveySchema: Record<string, unknown> | null | undefined,
+  fallbackTitle: string,
+  fallbackDescription?: string | null
+) => {
+  const details = surveySchema ? findOfficialVoteContent(surveySchema) : null;
+
+  return {
+    questionDescription:
+      details?.questionDescription ??
+      details?.pageDescription ??
+      fallbackDescription ??
+      null,
+    questionTitle: details?.questionTitle ?? fallbackTitle,
+    sectionTitle: details?.pageTitle ?? null,
+  };
 };
 
 export default factories.createCoreService('api::vote.vote', ({ strapi }) => {
@@ -200,7 +306,10 @@ export default factories.createCoreService('api::vote.vote', ({ strapi }) => {
         weight?: number | string | null;
       }>;
 
-      const votesByAgendaItem = new Map<number, { id: number; voteOptionId: number | null; weight: number }>();
+      const votesByAgendaItem = new Map<
+        number,
+        { ids: number[]; selectedOptionIds: number[]; weight: number }
+      >();
 
       for (const vote of votes) {
         const agendaItemId =
@@ -212,9 +321,29 @@ export default factories.createCoreService('api::vote.vote', ({ strapi }) => {
           continue;
         }
 
+        const existingVote = votesByAgendaItem.get(agendaItemId);
+        const voteOptionId = vote.vote_option?.id ?? null;
+
+        if (existingVote) {
+          existingVote.ids.push(vote.id);
+
+          if (typeof voteOptionId === 'number' && Number.isInteger(voteOptionId)) {
+            existingVote.selectedOptionIds.push(voteOptionId);
+          }
+
+          if (!existingVote.weight) {
+            existingVote.weight = Number(vote.weight ?? 0);
+          }
+
+          continue;
+        }
+
         votesByAgendaItem.set(agendaItemId, {
-          id: vote.id,
-          voteOptionId: vote.vote_option?.id ?? null,
+          ids: [vote.id],
+          selectedOptionIds:
+            typeof voteOptionId === 'number' && Number.isInteger(voteOptionId)
+              ? [voteOptionId]
+              : [],
           weight: Number(vote.weight ?? 0),
         });
       }
@@ -280,7 +409,10 @@ export default factories.createCoreService('api::vote.vote', ({ strapi }) => {
             requiresSpecialMajority: Boolean(agendaItem.requiresSpecialMajority),
             surveyLocale: agendaItem.survey_locale ?? 'es',
             surveySchema: agendaItem.survey_schema ?? null,
-            status: agendaItem.status ?? 'pending',
+            status: getResidentAgendaStatus(
+              agendaItem.status,
+              currentAssembly?.status ?? agendaItem.assembly?.status
+            ),
             title: agendaItem.title ?? `Encuesta ${agendaItem.id}`,
           };
         }),
@@ -310,7 +442,7 @@ export default factories.createCoreService('api::vote.vote', ({ strapi }) => {
       }
 
       const agendaItems = (await strapi.entityService.findMany('api::agenda-item.agenda-item', {
-        fields: ['id', 'title', 'status', 'requiresSpecialMajority'],
+        fields: ['id', 'title', 'description', 'status', 'requiresSpecialMajority', 'survey_schema'],
         filters: {
           assembly: {
             id: currentAssembly.id,
@@ -352,11 +484,19 @@ export default factories.createCoreService('api::vote.vote', ({ strapi }) => {
         number,
         { totalVotes: number; totalWeight: number }
       >();
+      const participationByAgendaItem = new Map<
+        number,
+        { totalVotes: number; totalWeight: number; voterIds: Set<number> }
+      >();
       const distinctVoters = new Set<number>();
       let totalVotes = 0;
       let totalWeight = 0;
 
       for (const row of voteRows) {
+        const agendaItemId =
+          typeof row.agenda_item === 'number'
+            ? row.agenda_item
+            : row.agenda_item?.id;
         const voteOptionId =
           typeof row.vote_option === 'number'
             ? row.vote_option
@@ -367,11 +507,36 @@ export default factories.createCoreService('api::vote.vote', ({ strapi }) => {
             : row.user?.id;
         const weight = parseNumericValue(row.weight);
 
-        totalVotes += 1;
-        totalWeight += weight;
-
         if (typeof userId === 'number' && Number.isInteger(userId) && userId > 0) {
           distinctVoters.add(userId);
+        }
+
+        if (
+          typeof agendaItemId === 'number' &&
+          Number.isInteger(agendaItemId) &&
+          typeof userId === 'number' &&
+          Number.isInteger(userId) &&
+          userId > 0
+        ) {
+          const existingParticipation = participationByAgendaItem.get(agendaItemId);
+
+          if (existingParticipation) {
+            if (!existingParticipation.voterIds.has(userId)) {
+              existingParticipation.voterIds.add(userId);
+              existingParticipation.totalVotes += 1;
+              existingParticipation.totalWeight += weight;
+              totalVotes += 1;
+              totalWeight += weight;
+            }
+          } else {
+            participationByAgendaItem.set(agendaItemId, {
+              totalVotes: 1,
+              totalWeight: weight,
+              voterIds: new Set([userId]),
+            });
+            totalVotes += 1;
+            totalWeight += weight;
+          }
         }
 
         if (typeof voteOptionId !== 'number' || !Number.isInteger(voteOptionId)) {
@@ -387,6 +552,16 @@ export default factories.createCoreService('api::vote.vote', ({ strapi }) => {
       }
 
       const surveys = agendaItems.map((agendaItem) => {
+        const voteSummary = getOfficialVoteSummary(
+          agendaItem.survey_schema,
+          agendaItem.title ?? `Encuesta ${agendaItem.id}`,
+          agendaItem.description ?? null
+        );
+        const normalizedStatus = getResidentAgendaStatus(
+          agendaItem.status,
+          currentAssembly.status ?? agendaItem.assembly?.status
+        );
+        const participation = participationByAgendaItem.get(agendaItem.id);
         const options = (agendaItem.vote_options ?? [])
           .map((option) => {
             const totals = voteTotalsByOptionId.get(option.id);
@@ -410,8 +585,8 @@ export default factories.createCoreService('api::vote.vote', ({ strapi }) => {
             return left.text.localeCompare(right.text);
           });
 
-        const totalVotes = options.reduce((sum, option) => sum + option.totalVotes, 0);
-        const totalWeight = options.reduce((sum, option) => sum + option.totalWeight, 0);
+        const totalVotes = participation?.totalVotes ?? 0;
+        const totalWeight = participation?.totalWeight ?? 0;
         const leadingOption = options[0] ?? null;
         const secondOption = options[1] ?? null;
         const hasTie =
@@ -430,7 +605,7 @@ export default factories.createCoreService('api::vote.vote', ({ strapi }) => {
 
         if (totalVotes > 0 && hasTie) {
           resultStatus = 'tie';
-        } else if (totalVotes > 0 && agendaItem.status === 'closed') {
+        } else if (totalVotes > 0 && normalizedStatus === 'closed') {
           resultStatus = meetsRequiredThreshold ? 'closed' : 'closed_without_threshold';
         } else if (totalVotes > 0) {
           resultStatus = meetsRequiredThreshold ? 'leading' : 'leading_without_threshold';
@@ -461,14 +636,17 @@ export default factories.createCoreService('api::vote.vote', ({ strapi }) => {
           options: normalizedOptions,
           requiresSpecialMajority: Boolean(agendaItem.requiresSpecialMajority),
           resultStatus,
-          status: agendaItem.status ?? 'pending',
+          questionDescription: voteSummary.questionDescription,
+          questionTitle: voteSummary.questionTitle,
+          sectionTitle: voteSummary.sectionTitle,
+          status: normalizedStatus,
           summary: {
             totalOptions: normalizedOptions.length,
             totalVotes,
             totalWeight,
             winningOptionId: winningOption?.id ?? null,
           },
-          title: agendaItem.title ?? `Encuesta ${agendaItem.id}`,
+          surveyTitle: agendaItem.title ?? `Encuesta ${agendaItem.id}`,
           winningOption,
         };
       });
@@ -507,6 +685,14 @@ export default factories.createCoreService('api::vote.vote', ({ strapi }) => {
     },
 
     async castVote(input: CastVoteInput) {
+      const voteOptionIds = [...new Set(input.voteOptionIds)].filter(
+        (item) => Number.isInteger(item) && item > 0
+      );
+
+      if (!voteOptionIds.length) {
+        throw new ValidationError('Debes seleccionar al menos una opcion de voto.');
+      }
+
       const user = (await strapi.db.query('plugin::users-permissions.user').findOne({
         where: { id: input.userId },
       })) as UserEntity | null;
@@ -528,7 +714,7 @@ export default factories.createCoreService('api::vote.vote', ({ strapi }) => {
           fields: ['id', 'title', 'status', 'requiresSpecialMajority'],
           populate: {
             assembly: {
-              fields: ['id'],
+              fields: ['id', 'status'],
             },
           },
         }
@@ -542,7 +728,11 @@ export default factories.createCoreService('api::vote.vote', ({ strapi }) => {
         throw new ValidationError('El punto del orden del dia no tiene una asamblea asociada.');
       }
 
-      if (agendaItem.status !== 'open') {
+      const votingIsAvailable =
+        agendaItem.status === 'open' ||
+        getResidentAgendaStatus(agendaItem.status, agendaItem.assembly?.status) === 'open';
+
+      if (!votingIsAvailable) {
         throw new ApplicationError('La votacion para este punto no esta abierta.');
       }
 
@@ -580,27 +770,38 @@ export default factories.createCoreService('api::vote.vote', ({ strapi }) => {
           },
         })) as ProxyAuthorizationEntity[];
 
-      const voteOption = (await strapi.entityService.findOne('api::vote-option.vote-option', input.voteOptionId, {
+      const voteOptions = (await strapi.entityService.findMany('api::vote-option.vote-option', {
+        filters: {
+          id: {
+            $in: voteOptionIds,
+          },
+        },
         fields: ['id', 'text'],
         populate: {
           agenda_item: {
             fields: ['id'],
           },
         },
-      })) as VoteOptionEntity | null;
+      })) as VoteOptionEntity[];
 
-      if (!voteOption || voteOption.agenda_item?.id !== input.agendaItemId) {
+      if (voteOptions.length !== voteOptionIds.length) {
+        throw new ValidationError('Una o mas opciones de voto no existen.');
+      }
+
+      if (
+        voteOptions.some((voteOption) => voteOption.agenda_item?.id !== input.agendaItemId)
+      ) {
         throw new ValidationError('La opcion de voto no pertenece al punto seleccionado.');
       }
 
-      const existingVote = await strapi.db.query('api::vote.vote').findOne({
+      const existingVotes = await strapi.db.query('api::vote.vote').findMany({
         where: {
           agenda_item: input.agendaItemId,
           user: input.userId,
         },
       });
 
-      if (existingVote) {
+      if (existingVotes.length) {
         throw new ApplicationError('El copropietario ya emitio su voto para este punto.');
       }
 
@@ -615,20 +816,31 @@ export default factories.createCoreService('api::vote.vote', ({ strapi }) => {
         throw new ValidationError('El coeficiente del copropietario no es valido para registrar el voto.');
       }
 
-      const vote = await strapi.entityService.create('api::vote.vote', {
-        data: {
-          agenda_item: input.agendaItemId,
-          mechanism: proxyDeclarations.length > 0 ? 'proxy' : input.mechanism,
-          user: input.userId,
-          vote_option: input.voteOptionId,
-          weight,
-        },
-        populate: {
-          vote_option: {
-            fields: ['id', 'text'],
-          },
-        },
-      });
+      const mechanism = proxyDeclarations.length > 0 ? 'proxy' : input.mechanism;
+      const orderedVoteOptions = voteOptionIds
+        .map((voteOptionId) =>
+          voteOptions.find((voteOption) => voteOption.id === voteOptionId) ?? null
+        )
+        .filter((voteOption): voteOption is VoteOptionEntity => Boolean(voteOption));
+
+      const votes = await Promise.all(
+        orderedVoteOptions.map((voteOption) =>
+          strapi.entityService.create('api::vote.vote', {
+            data: {
+              agenda_item: input.agendaItemId,
+              mechanism,
+              user: input.userId,
+              vote_option: voteOption.id,
+              weight,
+            },
+            populate: {
+              vote_option: {
+                fields: ['id', 'text'],
+              },
+            },
+          })
+        )
+      );
 
       return {
         agendaItem: {
@@ -638,9 +850,9 @@ export default factories.createCoreService('api::vote.vote', ({ strapi }) => {
           title: agendaItem.title,
         },
         vote: {
-          id: vote.id,
-          mechanism: proxyDeclarations.length > 0 ? 'proxy' : input.mechanism,
-          voteOptionId: input.voteOptionId,
+          ids: votes.map((vote) => vote.id),
+          mechanism,
+          voteOptionIds,
           weight,
         },
         voter: {

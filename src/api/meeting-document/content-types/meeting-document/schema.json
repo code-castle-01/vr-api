@@ -1,0 +1,34 @@
+{
+  "kind": "collectionType",
+  "collectionName": "meeting_documents",
+  "info": {
+    "singularName": "meeting-document",
+    "pluralName": "meeting-documents",
+    "displayName": "Meeting Document",
+    "description": "Documentos compartidos para la asamblea"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "title": {
+      "type": "string",
+      "required": true
+    },
+    "file": {
+      "type": "media",
+      "multiple": false,
+      "required": true,
+      "allowedTypes": [
+        "files",
+        "images"
+      ]
+    },
+    "uploaded_by": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "plugin::users-permissions.user"
+    }
+  }
+}

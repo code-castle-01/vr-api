@@ -34,6 +34,9 @@ const buildDefaultPassword = (unit: string): string => `VR-${unit.toUpperCase()}
 
 const AUTHENTICATED_ACTIONS = [
   'api::account.account.me',
+  'api::account.account.updateMe',
+  'api::meeting-document.meeting-document.library',
+  'api::meeting-document.meeting-document.libraryOne',
   'api::proxy-authorization.proxy-authorization.mine',
   'api::proxy-authorization.proxy-authorization.availableResidents',
   'api::proxy-authorization.proxy-authorization.submit',
@@ -42,6 +45,11 @@ const AUTHENTICATED_ACTIONS = [
 ];
 
 const ADMIN_ACTIONS = [
+  'api::meeting-document.meeting-document.adminList',
+  'api::meeting-document.meeting-document.adminOne',
+  'api::meeting-document.meeting-document.adminCreate',
+  'api::meeting-document.meeting-document.adminUpdate',
+  'api::meeting-document.meeting-document.adminDelete',
   'api::proxy-authorization.proxy-authorization.adminByAssembly',
 ];
 

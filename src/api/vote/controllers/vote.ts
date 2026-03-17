@@ -5,6 +5,7 @@ type CastVoteBody = {
   agendaItemId?: number | string;
   mechanism?: 'electronic' | 'in_person' | 'proxy' | 'correspondence';
   voteOptionId?: number | string;
+  voteOptionIds?: Array<number | string>;
 };
 
 type VoteService = {
@@ -14,7 +15,7 @@ type VoteService = {
     agendaItemId: number;
     mechanism: 'electronic' | 'in_person' | 'proxy' | 'correspondence';
     userId: number;
-    voteOptionId: number;
+    voteOptionIds: number[];
   }) => Promise<unknown>;
 };
 
@@ -37,14 +38,20 @@ export default factories.createCoreController('api::vote.vote', ({ strapi }) => 
       return ctx.unauthorized('Debes iniciar sesion para emitir un voto.');
     }
 
-    const { agendaItemId, voteOptionId, mechanism = 'electronic' } =
+    const { agendaItemId, voteOptionId, voteOptionIds, mechanism = 'electronic' } =
       (ctx.request.body ?? {}) as CastVoteBody;
 
     const parsedAgendaItemId = Number(agendaItemId);
-    const parsedVoteOptionId = Number(voteOptionId);
+    const parsedVoteOptionIds = Array.isArray(voteOptionIds)
+      ? voteOptionIds.map((item) => Number(item))
+      : [Number(voteOptionId)];
 
-    if (!Number.isInteger(parsedAgendaItemId) || !Number.isInteger(parsedVoteOptionId)) {
-      return ctx.badRequest('Debes enviar agendaItemId y voteOptionId validos.');
+    if (
+      !Number.isInteger(parsedAgendaItemId) ||
+      !parsedVoteOptionIds.length ||
+      parsedVoteOptionIds.some((item) => !Number.isInteger(item))
+    ) {
+      return ctx.badRequest('Debes enviar agendaItemId y al menos una opcion de voto valida.');
     }
 
     const voteService = strapi.service('api::vote.vote') as unknown as VoteService;
@@ -52,7 +59,7 @@ export default factories.createCoreController('api::vote.vote', ({ strapi }) => 
       agendaItemId: parsedAgendaItemId,
       mechanism,
       userId: Number(userId),
-      voteOptionId: parsedVoteOptionId,
+      voteOptionIds: [...new Set(parsedVoteOptionIds)],
     });
 
     ctx.body = result;

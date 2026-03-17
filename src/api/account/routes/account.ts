@@ -8,5 +8,13 @@ export default {
         policies: [],
       },
     },
+    {
+      method: 'PATCH',
+      path: '/account/me',
+      handler: 'account.updateMe',
+      config: {
+        policies: [],
+      },
+    },
   ],
 };

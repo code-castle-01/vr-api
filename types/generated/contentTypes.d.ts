@@ -575,6 +575,43 @@ export interface ApiCategoryCategory extends Schema.CollectionType {
   };
 }
 
+export interface ApiMeetingDocumentMeetingDocument
+  extends Schema.CollectionType {
+  collectionName: 'meeting_documents';
+  info: {
+    description: 'Documentos compartidos para la asamblea';
+    displayName: 'Meeting Document';
+    pluralName: 'meeting-documents';
+    singularName: 'meeting-document';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    createdAt: Attribute.DateTime;
+    createdBy: Attribute.Relation<
+      'api::meeting-document.meeting-document',
+      'oneToOne',
+      'admin::user'
+    > &
+      Attribute.Private;
+    file: Attribute.Media<'files' | 'images'> & Attribute.Required;
+    title: Attribute.String & Attribute.Required;
+    updatedAt: Attribute.DateTime;
+    updatedBy: Attribute.Relation<
+      'api::meeting-document.meeting-document',
+      'oneToOne',
+      'admin::user'
+    > &
+      Attribute.Private;
+    uploaded_by: Attribute.Relation<
+      'api::meeting-document.meeting-document',
+      'manyToOne',
+      'plugin::users-permissions.user'
+    >;
+  };
+}
+
 export interface ApiProxyAuthorizationProxyAuthorization
   extends Schema.CollectionType {
   collectionName: 'proxy_authorizations';
@@ -1151,6 +1188,7 @@ declare module '@strapi/types' {
       'api::attendance.attendance': ApiAttendanceAttendance;
       'api::blog-post.blog-post': ApiBlogPostBlogPost;
       'api::category.category': ApiCategoryCategory;
+      'api::meeting-document.meeting-document': ApiMeetingDocumentMeetingDocument;
       'api::proxy-authorization.proxy-authorization': ApiProxyAuthorizationProxyAuthorization;
       'api::vote-option.vote-option': ApiVoteOptionVoteOption;
       'api::vote.vote': ApiVoteVote;
