@@ -1,5 +1,15 @@
 type StrapiApp = {
   db: {
+    lifecycles?: {
+      subscribe: (options: {
+        beforeCreate?: (event: {
+          params: {
+            data?: Record<string, unknown>;
+          };
+        }) => Promise<void> | void;
+        models: string[];
+      }) => void;
+    };
     query: (uid: string) => {
       findMany?: (params: Record<string, unknown>) => Promise<Array<Record<string, unknown>>>;
       findOne: (params: Record<string, unknown>) => Promise<Record<string, unknown> | null>;
@@ -43,6 +53,44 @@ const FIRST_DATA_ROW = 3;
 const buildUserEmail = (unit: string): string => `${unit.toLowerCase()}@${DEFAULT_EMAIL_DOMAIN}`;
 
 const buildDefaultPassword = (unit: string): string => `VR-${unit.toUpperCase()}`;
+
+const isRoleValueMissing = (value: unknown) => {
+  if (value === null || value === undefined) {
+    return true;
+  }
+
+  if (typeof value === 'string') {
+    return value.trim().length === 0;
+  }
+
+  if (typeof value === 'number') {
+    return !Number.isFinite(value) || value <= 0;
+  }
+
+  if (Array.isArray(value)) {
+    return value.length === 0;
+  }
+
+  if (typeof value === 'object') {
+    const relationRecord = value as Record<string, unknown>;
+
+    if ('id' in relationRecord) {
+      return isRoleValueMissing(relationRecord.id);
+    }
+
+    if ('connect' in relationRecord) {
+      const connectValue = relationRecord.connect;
+
+      if (Array.isArray(connectValue)) {
+        return connectValue.length === 0;
+      }
+
+      return isRoleValueMissing(connectValue);
+    }
+  }
+
+  return false;
+};
 
 const AUTHENTICATED_ACTIONS = [
   'api::account.account.me',
@@ -103,11 +151,7 @@ const syncAssemblyOwners = async (strapi: StrapiApp, owners: AssemblyOwnerRow[])
     add: (data: Record<string, unknown>) => Promise<unknown>;
     edit: (id: number, data: Record<string, unknown>) => Promise<unknown>;
   };
-  const roles = await strapi.entityService.findMany('plugin::users-permissions.role', {
-    filters: { type: 'authenticated' },
-    fields: ['id'],
-  });
-  const authenticatedRoleId = roles[0]?.id;
+  const authenticatedRoleId = await findAuthenticatedRoleId(strapi);
 
   if (!authenticatedRoleId) {
     strapi.log.warn('No se encontro el rol authenticated; se omite la sincronizacion del padron.');
@@ -157,17 +201,51 @@ const syncAssemblyOwners = async (strapi: StrapiApp, owners: AssemblyOwnerRow[])
   );
 };
 
+const findAuthenticatedRoleId = async (strapi: StrapiApp) => {
+  const roles = await strapi.entityService.findMany('plugin::users-permissions.role', {
+    filters: { type: 'authenticated' },
+    fields: ['id'],
+  });
+
+  return roles[0]?.id;
+};
+
+const registerDefaultUserRoleHook = async (strapi: StrapiApp) => {
+  if (!strapi.db.lifecycles?.subscribe) {
+    strapi.log.warn(
+      'No fue posible registrar el rol por defecto para usuarios porque la API de lifecycles no está disponible.'
+    );
+    return;
+  }
+
+  const authenticatedRoleId = await findAuthenticatedRoleId(strapi);
+
+  if (!authenticatedRoleId) {
+    strapi.log.warn('No se encontro el rol authenticated; no se pudo registrar el rol por defecto.');
+    return;
+  }
+
+  strapi.db.lifecycles.subscribe({
+    models: ['plugin::users-permissions.user'],
+    beforeCreate(event) {
+      event.params.data = event.params.data ?? {};
+
+      if (isRoleValueMissing(event.params.data.role)) {
+        event.params.data.role = authenticatedRoleId;
+      }
+    },
+  });
+
+  strapi.log.info('Rol por defecto authenticated habilitado para nuevas creaciones de usuario.');
+};
+
 const enableAuthenticatedPermissions = async (strapi: StrapiApp): Promise<void> => {
   const roleService = strapi.plugin('users-permissions').service('role') as {
     findOne: (roleId: number) => Promise<Record<string, any>>;
     updateRole: (roleId: number, data: Record<string, unknown>) => Promise<void>;
   };
 
-  const roles = await strapi.entityService.findMany('plugin::users-permissions.role', {
-    filters: { type: 'authenticated' },
-    fields: ['id'],
-  });
-  const authenticatedRoleId = roles[0]?.id;
+  const authenticatedRoleId = await findAuthenticatedRoleId(strapi);
 
   if (!authenticatedRoleId) {
     strapi.log.warn('No se encontro el rol authenticated; se omite la configuracion de permisos.');
@@ -373,6 +451,13 @@ export default {
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Error desconocido';
       strapi.log.error(`Fallo la configuracion de permisos administrativos: ${message}`);
+    }
+
+    try {
+      await registerDefaultUserRoleHook(strapi);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Error desconocido';
+      strapi.log.error(`Fallo el registro del rol por defecto para usuarios: ${message}`);
     }
 
     try {
