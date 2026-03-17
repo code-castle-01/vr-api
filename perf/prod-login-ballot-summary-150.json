@@ -1,0 +1,160 @@
+{
+    "metrics": {
+        "http_reqs": {
+            "count": 150,
+            "rate": 95.90911805427766
+        },
+        "http_req_blocked": {
+            "avg": 380.7066253333335,
+            "min": 169.8507,
+            "med": 196.7849,
+            "max": 1177.3001,
+            "p(90)": 1163.7127,
+            "p(95)": 1168.6396100000002
+        },
+        "http_req_duration": {
+            "p(90)": 1180.67103,
+            "p(95)": 1197.29396,
+            "avg": 628.2578926666666,
+            "min": 90.5272,
+            "med": 554.4252,
+            "max": 1237.7546,
+            "thresholds": {
+                "p(95)<3000": false,
+                "p(99)<6000": false
+            }
+        },
+        "http_req_tls_handshaking": {
+            "med": 115.4664,
+            "max": 731.6677,
+            "p(90)": 472.10511999999994,
+            "p(95)": 694.9072499999999,
+            "avg": 194.72777333333323,
+            "min": 74.7558
+        },
+        "http_req_connecting": {
+            "avg": 184.69015600000006,
+            "min": 73.7736,
+            "med": 76.87289999999999,
+            "max": 1092.7793,
+            "p(90)": 1085.1115,
+            "p(95)": 1085.82737
+        },
+        "http_req_waiting": {
+            "p(90)": 1180.22527,
+            "p(95)": 1197.29396,
+            "avg": 627.1143266666666,
+            "min": 88.2636,
+            "med": 554.4252,
+            "max": 1237.7546
+        },
+        "login_success_rate": {
+            "passes": 0,
+            "fails": 150,
+            "thresholds": {
+                "rate>0.95": true
+            },
+            "value": 0
+        },
+        "data_sent": {
+            "count": 285900,
+            "rate": 182802.7790114532
+        },
+        "readonly_flow_duration": {
+            "avg": 1008.9733333333334,
+            "min": 267,
+            "med": 1109,
+            "max": 1561,
+            "p(90)": 1476.4,
+            "p(95)": 1518.6499999999999,
+            "thresholds": {
+                "p(95)<5000": false
+            }
+        },
+        "data_received": {
+            "count": 665323,
+            "rate": 425403.6143415078
+        },
+        "vus_max": {
+            "min": 150,
+            "max": 150,
+            "value": 150
+        },
+        "checks": {
+            "passes": 0,
+            "fails": 300,
+            "value": 0
+        },
+        "vus": {
+            "value": 91,
+            "min": 91,
+            "max": 91
+        },
+        "ballot_success_rate": {
+            "passes": 0,
+            "fails": 0,
+            "thresholds": {
+                "rate>0.95": false
+            },
+            "value": 0
+        },
+        "iterations": {
+            "count": 150,
+            "rate": 95.90911805427766
+        },
+        "http_req_failed": {
+            "passes": 150,
+            "fails": 0,
+            "thresholds": {
+                "rate<0.05": true
+            },
+            "value": 1
+        },
+        "http_req_sending": {
+            "avg": 0.132554,
+            "min": 0,
+            "med": 0,
+            "max": 0.6449,
+            "p(90)": 0.51509,
+            "p(95)": 0.5428
+        },
+        "http_req_receiving": {
+            "avg": 1.0110119999999998,
+            "min": 0,
+            "med": 0,
+            "max": 52.7225,
+            "p(90)": 0.25161999999999995,
+            "p(95)": 0.7083949999999993
+        },
+        "iteration_duration": {
+            "avg": 1009.0978666666664,
+            "min": 267.7811,
+            "med": 1109.17405,
+            "max": 1561.1622,
+            "p(90)": 1476.79492,
+            "p(95)": 1518.90619
+        }
+    },
+    "root_group": {
+        "name": "",
+        "path": "",
+        "id": "d41d8cd98f00b204e9800998ecf8427e",
+        "groups": {},
+        "checks": {
+                "login status 200": {
+                    "passes": 0,
+                    "fails": 150,
+                    "name": "login status 200",
+                    "path": "::login status 200",
+                    "id": "a9f04e9f501317c68a9f824e04811bea"
+                },
+                "login returns jwt": {
+                    "name": "login returns jwt",
+                    "path": "::login returns jwt",
+                    "id": "ec78f4507d1cd72d271e2719277a590d",
+                    "passes": 0,
+                    "fails": 150
+                }
+            }
+    }
+}

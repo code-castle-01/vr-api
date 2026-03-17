@@ -1,7 +1,33 @@
 import path from 'path';
 
+const parseDatabaseUrl = (value?: string) => {
+  if (!value) {
+    return {};
+  }
+
+  try {
+    const parsedUrl = new URL(value);
+    const pathname = parsedUrl.pathname.replace(/^\//, '');
+
+    return {
+      database: pathname || undefined,
+      host: parsedUrl.hostname || undefined,
+      password: parsedUrl.password
+        ? decodeURIComponent(parsedUrl.password)
+        : undefined,
+      port: parsedUrl.port ? Number(parsedUrl.port) : undefined,
+      user: parsedUrl.username
+        ? decodeURIComponent(parsedUrl.username)
+        : undefined,
+    };
+  } catch {
+    return {};
+  }
+};
+
 export default ({ env }) => {
   const fallbackDatabaseUrl = env('MYSQL_URL', env('MYSQL_PUBLIC_URL'));
+  const parsedDatabaseUrl = parseDatabaseUrl(env('DATABASE_URL', fallbackDatabaseUrl));
   const fallbackDatabaseHost = env('MYSQLHOST', 'localhost');
   const fallbackDatabasePort = env.int('MYSQLPORT', 3306);
   const fallbackDatabaseName = env('MYSQLDATABASE', 'strapi');
@@ -17,12 +43,11 @@ export default ({ env }) => {
   const connections = {
     mysql: {
       connection: {
-        connectionString: env('DATABASE_URL', fallbackDatabaseUrl),
-        host: env('DATABASE_HOST', fallbackDatabaseHost),
-        port: env.int('DATABASE_PORT', fallbackDatabasePort),
-        database: env('DATABASE_NAME', fallbackDatabaseName),
-        user: env('DATABASE_USERNAME', fallbackDatabaseUser),
-        password: env('DATABASE_PASSWORD', fallbackDatabasePassword),
+        host: env('DATABASE_HOST', parsedDatabaseUrl.host ?? fallbackDatabaseHost),
+        port: env.int('DATABASE_PORT', parsedDatabaseUrl.port ?? fallbackDatabasePort),
+        database: env('DATABASE_NAME', parsedDatabaseUrl.database ?? fallbackDatabaseName),
+        user: env('DATABASE_USERNAME', parsedDatabaseUrl.user ?? fallbackDatabaseUser),
+        password: env('DATABASE_PASSWORD', parsedDatabaseUrl.password ?? fallbackDatabasePassword),
         ssl: env.bool('DATABASE_SSL', false) && {
           key: env('DATABASE_SSL_KEY', undefined),
           cert: env('DATABASE_SSL_CERT', undefined),
@@ -39,12 +64,11 @@ export default ({ env }) => {
     },
     mysql2: {
       connection: {
-        connectionString: env('DATABASE_URL', fallbackDatabaseUrl),
-        host: env('DATABASE_HOST', fallbackDatabaseHost),
-        port: env.int('DATABASE_PORT', fallbackDatabasePort),
-        database: env('DATABASE_NAME', fallbackDatabaseName),
-        user: env('DATABASE_USERNAME', fallbackDatabaseUser),
-        password: env('DATABASE_PASSWORD', fallbackDatabasePassword),
+        host: env('DATABASE_HOST', parsedDatabaseUrl.host ?? fallbackDatabaseHost),
+        port: env.int('DATABASE_PORT', parsedDatabaseUrl.port ?? fallbackDatabasePort),
+        database: env('DATABASE_NAME', parsedDatabaseUrl.database ?? fallbackDatabaseName),
+        user: env('DATABASE_USERNAME', parsedDatabaseUrl.user ?? fallbackDatabaseUser),
+        password: env('DATABASE_PASSWORD', parsedDatabaseUrl.password ?? fallbackDatabasePassword),
         ssl: env.bool('DATABASE_SSL', false) && {
           key: env('DATABASE_SSL_KEY', undefined),
           cert: env('DATABASE_SSL_CERT', undefined),
