@@ -97,8 +97,46 @@ const OFFICIAL_VOTE_QUESTION = 'official_vote';
 const isObjectRecord = (value: unknown): value is SurveyRecord =>
   typeof value === 'object' && value !== null && !Array.isArray(value);
 
+const getVoteLockTimeoutSeconds = () => {
+  const parsedValue = Number(process.env.VOTE_SUBMISSION_LOCK_TIMEOUT ?? 15);
+
+  if (!Number.isFinite(parsedValue)) {
+    return 15;
+  }
+
+  return Math.max(1, Math.min(60, Math.trunc(parsedValue)));
+};
+
 const toTrimmedString = (value: unknown) =>
   typeof value === 'string' ? value.trim() : '';
+
+const parseMysqlRawScalar = (value: unknown, key: string) => {
+  if (Array.isArray(value)) {
+    for (const item of value) {
+      if (Array.isArray(item)) {
+        const nestedValue = parseMysqlRawScalar(item, key);
+
+        if (nestedValue !== null) {
+          return nestedValue;
+        }
+
+        continue;
+      }
+
+      if (isObjectRecord(item) && key in item) {
+        return Number(item[key]);
+      }
+    }
+
+    return null;
+  }
+
+  if (isObjectRecord(value) && key in value) {
+    return Number(value[key]);
+  }
+
+  return null;
+};
 
 const getResidentAgendaStatus = (
   agendaStatus: 'pending' | 'open' | 'closed' | undefined,
@@ -196,6 +234,43 @@ const getOfficialVoteSummary = (
 };
 
 export default factories.createCoreService('api::vote.vote', ({ strapi }) => {
+  const isMysqlClient = () => {
+    const client = strapi.config.get<string>('database.connection.client', '');
+
+    return client === 'mysql' || client === 'mysql2';
+  };
+
+  const withVoteSubmissionLock = async <T>(
+    lockName: string,
+    callback: () => Promise<T>
+  ) => {
+    if (!isMysqlClient()) {
+      return callback();
+    }
+
+    const lockTimeoutSeconds = getVoteLockTimeoutSeconds();
+
+    return strapi.db.connection.transaction(async (trx) => {
+      const acquireResult = await trx.raw('SELECT GET_LOCK(?, ?) AS acquired', [
+        lockName.slice(0, 64),
+        lockTimeoutSeconds,
+      ]);
+      const wasLockAcquired = parseMysqlRawScalar(acquireResult, 'acquired');
+
+      if (wasLockAcquired !== 1) {
+        throw new ApplicationError(
+          'Ya hay una solicitud de voto en proceso para este punto. Espera unos segundos e intentalo de nuevo.'
+        );
+      }
+
+      try {
+        return await callback();
+      } finally {
+        await trx.raw('SELECT RELEASE_LOCK(?) AS released', [lockName.slice(0, 64)]);
+      }
+    });
+  };
+
   const findCurrentAssembly = async (): Promise<AssemblyEntity | null> => {
     const inProgressAssemblies = (await strapi.entityService.findMany('api::assembly.assembly', {
       fields: ['id', 'title', 'date', 'status'],
@@ -693,9 +768,32 @@ export default factories.createCoreService('api::vote.vote', ({ strapi }) => {
         throw new ValidationError('Debes seleccionar al menos una opcion de voto.');
       }
 
-      const user = (await strapi.db.query('plugin::users-permissions.user').findOne({
-        where: { id: input.userId },
-      })) as UserEntity | null;
+      const [user, agendaItem, voteOptions] = await Promise.all([
+        strapi.db.query('plugin::users-permissions.user').findOne({
+          where: { id: input.userId },
+        }) as Promise<UserEntity | null>,
+        strapi.entityService.findOne('api::agenda-item.agenda-item', input.agendaItemId, {
+          fields: ['id', 'title', 'status', 'requiresSpecialMajority'],
+          populate: {
+            assembly: {
+              fields: ['id', 'status'],
+            },
+          },
+        }) as Promise<AgendaItemEntity | null>,
+        strapi.entityService.findMany('api::vote-option.vote-option', {
+          filters: {
+            id: {
+              $in: voteOptionIds,
+            },
+          },
+          fields: ['id', 'text'],
+          populate: {
+            agenda_item: {
+              fields: ['id'],
+            },
+          },
+        }) as Promise<VoteOptionEntity[]>,
+      ]);
 
       if (!user) {
         throw new NotFoundError('No se encontro el copropietario autenticado.');
@@ -706,19 +804,6 @@ export default factories.createCoreService('api::vote.vote', ({ strapi }) => {
           'El usuario tiene restriccion de cartera y no puede votar hasta que el administrador lo habilite.'
         );
       }
-
-      const agendaItem = (await strapi.entityService.findOne(
-        'api::agenda-item.agenda-item',
-        input.agendaItemId,
-        {
-          fields: ['id', 'title', 'status', 'requiresSpecialMajority'],
-          populate: {
-            assembly: {
-              fields: ['id', 'status'],
-            },
-          },
-        }
-      )) as AgendaItemEntity | null;
 
       if (!agendaItem) {
         throw new NotFoundError('El punto del orden del dia no existe.');
@@ -736,54 +821,6 @@ export default factories.createCoreService('api::vote.vote', ({ strapi }) => {
         throw new ApplicationError('La votacion para este punto no esta abierta.');
       }
 
-      const delegatedBy = (await strapi.db
-        .query('api::proxy-authorization.proxy-authorization')
-        .findOne({
-          where: {
-            assembly: agendaItem.assembly.id,
-            represented_user: input.userId,
-          },
-          populate: {
-            submitted_by: true,
-          },
-        })) as ProxyAuthorizationEntity | null;
-
-      if (delegatedBy?.submitted_by) {
-        throw new ForbiddenError(
-          `Tu unidad ya fue representada mediante poder por ${
-            delegatedBy.submitted_by.NombreCompleto ??
-            delegatedBy.submitted_by.UnidadPrivada ??
-            `Usuario ${delegatedBy.submitted_by.id}`
-          }.`
-        );
-      }
-
-      const proxyDeclarations = (await strapi.db
-        .query('api::proxy-authorization.proxy-authorization')
-        .findMany({
-          where: {
-            assembly: agendaItem.assembly.id,
-            submitted_by: input.userId,
-          },
-          populate: {
-            represented_user: true,
-          },
-        })) as ProxyAuthorizationEntity[];
-
-      const voteOptions = (await strapi.entityService.findMany('api::vote-option.vote-option', {
-        filters: {
-          id: {
-            $in: voteOptionIds,
-          },
-        },
-        fields: ['id', 'text'],
-        populate: {
-          agenda_item: {
-            fields: ['id'],
-          },
-        },
-      })) as VoteOptionEntity[];
-
       if (voteOptions.length !== voteOptionIds.length) {
         throw new ValidationError('Una o mas opciones de voto no existen.');
       }
@@ -794,74 +831,108 @@ export default factories.createCoreService('api::vote.vote', ({ strapi }) => {
         throw new ValidationError('La opcion de voto no pertenece al punto seleccionado.');
       }
 
-      const existingVotes = await strapi.db.query('api::vote.vote').findMany({
-        where: {
-          agenda_item: input.agendaItemId,
-          user: input.userId,
-        },
-      });
-
-      if (existingVotes.length) {
-        throw new ApplicationError('El copropietario ya emitio su voto para este punto.');
-      }
-
-      const weight =
-        Number(user.Coeficiente ?? 0) +
-        proxyDeclarations.reduce(
-          (sum, item) => sum + Number(item.represented_user?.Coeficiente ?? 0),
-          0
-        );
-
-      if (!Number.isFinite(weight) || weight <= 0) {
-        throw new ValidationError('El coeficiente del copropietario no es valido para registrar el voto.');
-      }
-
-      const mechanism = proxyDeclarations.length > 0 ? 'proxy' : input.mechanism;
+      const voteOptionsById = new Map(voteOptions.map((voteOption) => [voteOption.id, voteOption]));
       const orderedVoteOptions = voteOptionIds
-        .map((voteOptionId) =>
-          voteOptions.find((voteOption) => voteOption.id === voteOptionId) ?? null
-        )
+        .map((voteOptionId) => voteOptionsById.get(voteOptionId) ?? null)
         .filter((voteOption): voteOption is VoteOptionEntity => Boolean(voteOption));
+      const submissionLockName = `vote:${agendaItem.id}:${input.userId}`;
 
-      const votes = await Promise.all(
-        orderedVoteOptions.map((voteOption) =>
-          strapi.entityService.create('api::vote.vote', {
-            data: {
-              agenda_item: input.agendaItemId,
-              mechanism,
-              user: input.userId,
-              vote_option: voteOption.id,
-              weight,
+      return withVoteSubmissionLock(submissionLockName, async () => {
+        const [delegatedBy, proxyDeclarations, existingVote] = await Promise.all([
+          strapi.db.query('api::proxy-authorization.proxy-authorization').findOne({
+            where: {
+              assembly: agendaItem.assembly.id,
+              represented_user: input.userId,
             },
             populate: {
-              vote_option: {
-                fields: ['id', 'text'],
-              },
+              submitted_by: true,
             },
-          })
-        )
-      );
+          }) as Promise<ProxyAuthorizationEntity | null>,
+          strapi.db.query('api::proxy-authorization.proxy-authorization').findMany({
+            where: {
+              assembly: agendaItem.assembly.id,
+              submitted_by: input.userId,
+            },
+            populate: {
+              represented_user: true,
+            },
+          }) as Promise<ProxyAuthorizationEntity[]>,
+          strapi.db.query('api::vote.vote').findOne({
+            where: {
+              agenda_item: input.agendaItemId,
+              user: input.userId,
+            },
+          }) as Promise<{ id: number } | null>,
+        ]);
 
-      return {
-        agendaItem: {
-          id: agendaItem.id,
-          requiresSpecialMajority: Boolean(agendaItem.requiresSpecialMajority),
-          status: agendaItem.status,
-          title: agendaItem.title,
-        },
-        vote: {
-          ids: votes.map((vote) => vote.id),
-          mechanism,
-          voteOptionIds,
-          weight,
-        },
-        voter: {
-          id: user.id,
-          name: user.NombreCompleto ?? user.UnidadPrivada ?? `Usuario ${user.id}`,
-          unit: user.UnidadPrivada ?? null,
-        },
-        totalHomesRepresented: 1 + proxyDeclarations.length,
-      };
+        if (delegatedBy?.submitted_by) {
+          throw new ForbiddenError(
+            `Tu unidad ya fue representada mediante poder por ${
+              delegatedBy.submitted_by.NombreCompleto ??
+              delegatedBy.submitted_by.UnidadPrivada ??
+              `Usuario ${delegatedBy.submitted_by.id}`
+            }.`
+          );
+        }
+
+        if (existingVote) {
+          throw new ApplicationError('El copropietario ya emitio su voto para este punto.');
+        }
+
+        const weight =
+          Number(user.Coeficiente ?? 0) +
+          proxyDeclarations.reduce(
+            (sum, item) => sum + Number(item.represented_user?.Coeficiente ?? 0),
+            0
+          );
+
+        if (!Number.isFinite(weight) || weight <= 0) {
+          throw new ValidationError(
+            'El coeficiente del copropietario no es valido para registrar el voto.'
+          );
+        }
+
+        const mechanism = proxyDeclarations.length > 0 ? 'proxy' : input.mechanism;
+        const votes = await Promise.all(
+          orderedVoteOptions.map((voteOption) =>
+            strapi.entityService.create('api::vote.vote', {
+              data: {
+                agenda_item: input.agendaItemId,
+                mechanism,
+                user: input.userId,
+                vote_option: voteOption.id,
+                weight,
+              },
+              populate: {
+                vote_option: {
+                  fields: ['id', 'text'],
+                },
+              },
+            })
+          )
+        );
+
+        return {
+          agendaItem: {
+            id: agendaItem.id,
+            requiresSpecialMajority: Boolean(agendaItem.requiresSpecialMajority),
+            status: agendaItem.status,
+            title: agendaItem.title,
+          },
+          vote: {
+            ids: votes.map((vote) => vote.id),
+            mechanism,
+            voteOptionIds,
+            weight,
+          },
+          voter: {
+            id: user.id,
+            name: user.NombreCompleto ?? user.UnidadPrivada ?? `Usuario ${user.id}`,
+            unit: user.UnidadPrivada ?? null,
+          },
+          totalHomesRepresented: 1 + proxyDeclarations.length,
+        };
+      });
     },
   };
 });
