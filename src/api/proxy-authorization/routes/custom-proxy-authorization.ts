@@ -25,6 +25,14 @@ export default {
       },
     },
     {
+      method: 'POST',
+      path: '/proxy-authorizations/lock',
+      handler: 'proxy-authorization.lock',
+      config: {
+        policies: [],
+      },
+    },
+    {
       method: 'DELETE',
       path: '/proxy-authorizations/:id',
       handler: 'proxy-authorization.remove',

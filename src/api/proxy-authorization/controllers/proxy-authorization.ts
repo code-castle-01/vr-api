@@ -1,12 +1,26 @@
 import { factories } from '@strapi/strapi';
 import type { Context } from 'koa';
+import { getResidentAccessModeFromContext } from '../../../utils/resident-session';
 
 type ProxyAuthorizationService = {
-  getSummary: (userId: number) => Promise<unknown>;
-  listAvailableResidents: (userId: number) => Promise<unknown>;
+  getSummary: (userId: number, accessMode: 'owner' | 'proxy') => Promise<unknown>;
+  listAvailableResidents: (userId: number, accessMode: 'owner' | 'proxy') => Promise<unknown>;
   listByAssembly: (userId: number, assemblyId: number) => Promise<unknown>;
-  removeDeclaration: (userId: number, declarationId: number) => Promise<unknown>;
-  submitDeclarations: (userId: number, payload: unknown, files: unknown) => Promise<unknown>;
+  removeDeclaration: (
+    userId: number,
+    accessMode: 'owner' | 'proxy',
+    declarationId: number
+  ) => Promise<unknown>;
+  submitDeclarations: (
+    userId: number,
+    accessMode: 'owner' | 'proxy',
+    payload: unknown,
+    files: unknown
+  ) => Promise<unknown>;
+  lockRepresentation: (
+    userId: number,
+    accessMode: 'owner' | 'proxy'
+  ) => Promise<unknown>;
 };
 
 export default factories.createCoreController(
@@ -19,11 +33,13 @@ export default factories.createCoreController(
         return ctx.unauthorized('Debes iniciar sesion para consultar tus poderes.');
       }
 
+      const accessMode = (await getResidentAccessModeFromContext(strapi, ctx)) ?? 'owner';
+
       const proxyAuthorizationService = strapi.service(
         'api::proxy-authorization.proxy-authorization'
       ) as unknown as ProxyAuthorizationService;
 
-      ctx.body = await proxyAuthorizationService.getSummary(Number(userId));
+      ctx.body = await proxyAuthorizationService.getSummary(Number(userId), accessMode);
     },
 
     async availableResidents(ctx: Context) {
@@ -33,11 +49,16 @@ export default factories.createCoreController(
         return ctx.unauthorized('Debes iniciar sesion para consultar los residentes.');
       }
 
+      const accessMode = (await getResidentAccessModeFromContext(strapi, ctx)) ?? 'owner';
+
       const proxyAuthorizationService = strapi.service(
         'api::proxy-authorization.proxy-authorization'
       ) as unknown as ProxyAuthorizationService;
 
-      ctx.body = await proxyAuthorizationService.listAvailableResidents(Number(userId));
+      ctx.body = await proxyAuthorizationService.listAvailableResidents(
+        Number(userId),
+        accessMode
+      );
     },
 
     async submit(ctx: Context) {
@@ -47,6 +68,7 @@ export default factories.createCoreController(
         return ctx.unauthorized('Debes iniciar sesion para registrar poderes.');
       }
 
+      const accessMode = (await getResidentAccessModeFromContext(strapi, ctx)) ?? 'owner';
       const payload = ctx.request.body?.payload ?? ctx.request.body;
       const files = ctx.request.files?.proofs ?? ctx.request.files?.proof ?? ctx.request.files;
 
@@ -56,9 +78,26 @@ export default factories.createCoreController(
 
       ctx.body = await proxyAuthorizationService.submitDeclarations(
         Number(userId),
+        accessMode,
         payload,
         files
       );
+    },
+
+    async lock(ctx: Context) {
+      const userId = ctx.state.user?.id;
+
+      if (!userId) {
+        return ctx.unauthorized('Debes iniciar sesion para confirmar tu participacion.');
+      }
+
+      const accessMode = (await getResidentAccessModeFromContext(strapi, ctx)) ?? 'owner';
+
+      const proxyAuthorizationService = strapi.service(
+        'api::proxy-authorization.proxy-authorization'
+      ) as unknown as ProxyAuthorizationService;
+
+      ctx.body = await proxyAuthorizationService.lockRepresentation(Number(userId), accessMode);
     },
 
     async remove(ctx: Context) {
@@ -68,6 +107,8 @@ export default factories.createCoreController(
       if (!userId) {
         return ctx.unauthorized('Debes iniciar sesion para remover poderes.');
       }
+
+      const accessMode = (await getResidentAccessModeFromContext(strapi, ctx)) ?? 'owner';
 
       if (!Number.isInteger(declarationId) || declarationId <= 0) {
         return ctx.badRequest('Debes indicar un poder valido.');
@@ -79,6 +120,7 @@ export default factories.createCoreController(
 
       ctx.body = await proxyAuthorizationService.removeDeclaration(
         Number(userId),
+        accessMode,
         declarationId
       );
     },

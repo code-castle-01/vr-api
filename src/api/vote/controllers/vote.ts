@@ -1,5 +1,6 @@
 import { factories } from '@strapi/strapi';
 import type { Context } from 'koa';
+import { getResidentAccessModeFromContext } from '../../../utils/resident-session';
 
 type CastVoteBody = {
   agendaItemId?: number | string;
@@ -9,9 +10,10 @@ type CastVoteBody = {
 };
 
 type VoteService = {
-  getBallot: (userId: number) => Promise<unknown>;
+  getBallot: (userId: number, accessMode: 'owner' | 'proxy') => Promise<unknown>;
   getResultsOverview: () => Promise<unknown>;
   castVote: (input: {
+    accessMode: 'owner' | 'proxy';
     agendaItemId: number;
     mechanism: 'electronic' | 'in_person' | 'proxy' | 'correspondence';
     userId: number;
@@ -28,7 +30,9 @@ export default factories.createCoreController('api::vote.vote', ({ strapi }) => 
     }
 
     const voteService = strapi.service('api::vote.vote') as unknown as VoteService;
-    ctx.body = await voteService.getBallot(Number(userId));
+    const accessMode = (await getResidentAccessModeFromContext(strapi, ctx)) ?? 'owner';
+
+    ctx.body = await voteService.getBallot(Number(userId), accessMode);
   },
 
   async cast(ctx: Context) {
@@ -55,7 +59,9 @@ export default factories.createCoreController('api::vote.vote', ({ strapi }) => 
     }
 
     const voteService = strapi.service('api::vote.vote') as unknown as VoteService;
+    const accessMode = (await getResidentAccessModeFromContext(strapi, ctx)) ?? 'owner';
     const result = await voteService.castVote({
+      accessMode,
       agendaItemId: parsedAgendaItemId,
       mechanism,
       userId: Number(userId),

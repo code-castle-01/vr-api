@@ -1,8 +1,16 @@
+const path = require('path');
+const bcrypt = require('bcryptjs');
+
 type StrapiApp = {
   db: {
     lifecycles?: {
       subscribe: (options: {
         beforeCreate?: (event: {
+          params: {
+            data?: Record<string, unknown>;
+          };
+        }) => Promise<void> | void;
+        beforeUpdate?: (event: {
           params: {
             data?: Record<string, unknown>;
           };
@@ -41,18 +49,31 @@ type StrapiApp = {
   };
 };
 
+const residentRoster = require(path.resolve(process.cwd(), 'shared', 'resident-roster'));
+
 type AssemblyOwnerRow = {
   fullName: string;
   unit: string;
 };
 
-const DEFAULT_COEFFICIENT = 100;
-const DEFAULT_EMAIL_DOMAIN = 'vegasdelrio.com';
-const FIRST_DATA_ROW = 3;
+const DEFAULT_COEFFICIENT = Number(residentRoster.DEFAULT_COEFFICIENT);
+const buildUserEmail = (unit: string): string =>
+  residentRoster.buildResidentEmail(unit);
+const buildDefaultPassword = (unit: string): string =>
+  residentRoster.buildResidentPassword(unit);
+const normalizeUnit = (value: string): string => residentRoster.normalizeUnit(value);
+const PASSWORD_HASH_ROUNDS = 10;
+const isHashedPassword = (value: unknown): value is string =>
+  typeof value === 'string' && /^\$2[aby]\$\d{2}\$/.test(value);
+const normalizeResidentCoefficient = (value: unknown) => {
+  const parsed = Number(value);
 
-const buildUserEmail = (unit: string): string => `${unit.toLowerCase()}@${DEFAULT_EMAIL_DOMAIN}`;
+  if (!Number.isFinite(parsed) || parsed <= 0 || parsed === 100) {
+    return DEFAULT_COEFFICIENT;
+  }
 
-const buildDefaultPassword = (unit: string): string => `VR-${unit.toUpperCase()}`;
+  return parsed;
+};
 
 const isRoleValueMissing = (value: unknown) => {
   if (value === null || value === undefined) {
@@ -99,6 +120,7 @@ const AUTHENTICATED_ACTIONS = [
   'api::meeting-document.meeting-document.libraryOne',
   'api::proxy-authorization.proxy-authorization.mine',
   'api::proxy-authorization.proxy-authorization.availableResidents',
+  'api::proxy-authorization.proxy-authorization.lock',
   'api::proxy-authorization.proxy-authorization.submit',
   'api::vote.vote.ballot',
   'api::vote.vote.cast',
@@ -121,29 +143,117 @@ type ProxyAuthorizationRow = {
   id: number;
 };
 
-const readAssemblyOwners = (filePath: string): AssemblyOwnerRow[] => {
-  const xlsx = require('xlsx');
+const readAssemblyOwners = (filePath: string): AssemblyOwnerRow[] =>
+  residentRoster.readRosterOwners(filePath);
 
-  const workbook = xlsx.readFile(filePath);
-  const sheet = workbook.Sheets[workbook.SheetNames[0]];
-  const rows = xlsx.utils.sheet_to_json(sheet, { header: 1 }) as unknown[][];
+const normalizeRawRows = (rawResult: unknown): Array<Record<string, unknown>> => {
+  if (Array.isArray(rawResult)) {
+    if (Array.isArray(rawResult[0])) {
+      return rawResult[0] as Array<Record<string, unknown>>;
+    }
 
-  return rows
-    .slice(FIRST_DATA_ROW)
-    .map((row) => {
-      const unit = row?.[0]?.toString().trim().toUpperCase();
-      const fullName = row?.[1]?.toString().trim();
+    return rawResult as Array<Record<string, unknown>>;
+  }
 
-      if (!unit || !fullName) {
-        return null;
-      }
+  return [];
+};
 
-      return {
-        unit,
-        fullName,
-      };
-    })
-    .filter((row): row is AssemblyOwnerRow => row !== null);
+const ensureResidentCoefficientPrecision = async (strapi: StrapiApp) => {
+  const dbConnection = (strapi as any).db?.connection;
+  const client = dbConnection?.client?.config?.client;
+
+  if (client !== 'mysql' && client !== 'mysql2') {
+    return;
+  }
+
+  if (typeof dbConnection?.raw !== 'function') {
+    strapi.log.warn('No fue posible verificar la precision de coeficiente en la base de datos.');
+    return;
+  }
+
+  const rawColumns = await dbConnection.raw("SHOW COLUMNS FROM up_users LIKE 'coeficiente'");
+  const [column] = normalizeRawRows(rawColumns);
+  const currentType = String(column?.Type ?? '').toLowerCase();
+
+  if (currentType === 'decimal(12,6)') {
+    return;
+  }
+
+  await dbConnection.raw(
+    `ALTER TABLE up_users MODIFY coeficiente DECIMAL(12,6) NULL DEFAULT ${DEFAULT_COEFFICIENT}`
+  );
+
+  strapi.log.info('Precision de coeficiente ajustada a DECIMAL(12,6).');
+};
+
+const resolveRoleId = (value: unknown): number | null => {
+  if (typeof value === 'number' && Number.isInteger(value) && value > 0) {
+    return value;
+  }
+
+  if (!value || typeof value !== 'object') {
+    return null;
+  }
+
+  const relationRecord = value as Record<string, unknown>;
+
+  if (typeof relationRecord.id === 'number') {
+    return relationRecord.id;
+  }
+
+  if (typeof relationRecord.connect === 'number') {
+    return relationRecord.connect;
+  }
+
+  if (Array.isArray(relationRecord.connect)) {
+    const connectedEntry = relationRecord.connect[0];
+
+    if (typeof connectedEntry === 'number') {
+      return connectedEntry;
+    }
+
+    if (
+      connectedEntry &&
+      typeof connectedEntry === 'object' &&
+      typeof (connectedEntry as Record<string, unknown>).id === 'number'
+    ) {
+      return (connectedEntry as Record<string, number>).id;
+    }
+  }
+
+  return null;
+};
+
+const applyResidentDefaults = async (
+  data: Record<string, unknown>,
+  authenticatedRoleId: number
+) => {
+  const fallbackUnitSource =
+    typeof data.UnidadPrivada === 'string'
+      ? data.UnidadPrivada
+      : typeof data.username === 'string'
+        ? data.username
+        : '';
+  const normalizedUnit = normalizeUnit(fallbackUnitSource);
+  const resolvedRoleId = resolveRoleId(data.role);
+  const shouldTreatAsResident =
+    normalizedUnit.length > 0 &&
+    (resolvedRoleId === null || resolvedRoleId === authenticatedRoleId);
+
+  if (!shouldTreatAsResident) {
+    return;
+  }
+
+  data.UnidadPrivada = normalizedUnit;
+  data.username = normalizedUnit;
+  data.email = buildUserEmail(normalizedUnit);
+  data.password = buildDefaultPassword(normalizedUnit);
+
+  data.Coeficiente = normalizeResidentCoefficient(data.Coeficiente);
+
+  if (!isHashedPassword(data.password)) {
+    data.password = await bcrypt.hash(String(data.password), PASSWORD_HASH_ROUNDS);
+  }
 };
 
 const syncAssemblyOwners = async (strapi: StrapiApp, owners: AssemblyOwnerRow[]): Promise<void> => {
@@ -174,7 +284,7 @@ const syncAssemblyOwners = async (strapi: StrapiApp, owners: AssemblyOwnerRow[])
       role: authenticatedRoleId,
       NombreCompleto: owner.fullName,
       UnidadPrivada: owner.unit,
-      Coeficiente: Number(existingUser?.Coeficiente ?? DEFAULT_COEFFICIENT),
+      Coeficiente: normalizeResidentCoefficient(existingUser?.Coeficiente),
       EstadoCartera: Boolean(existingUser?.EstadoCartera ?? false),
     };
 
@@ -187,11 +297,9 @@ const syncAssemblyOwners = async (strapi: StrapiApp, owners: AssemblyOwnerRow[])
       continue;
     }
 
-    const shouldBackfillPassword = !existingUser.password;
-
     await userService.edit(existingUser.id as number, {
       ...baseData,
-      ...(shouldBackfillPassword ? { password: buildDefaultPassword(owner.unit) } : {}),
+      password: buildDefaultPassword(owner.unit),
     });
     updated += 1;
   }
@@ -227,12 +335,19 @@ const registerDefaultUserRoleHook = async (strapi: StrapiApp) => {
 
   strapi.db.lifecycles.subscribe({
     models: ['plugin::users-permissions.user'],
-    beforeCreate(event) {
+    async beforeCreate(event) {
       event.params.data = event.params.data ?? {};
 
       if (isRoleValueMissing(event.params.data.role)) {
         event.params.data.role = authenticatedRoleId;
       }
+
+      await applyResidentDefaults(event.params.data, authenticatedRoleId);
+    },
+    async beforeUpdate(event) {
+      event.params.data = event.params.data ?? {};
+
+      await applyResidentDefaults(event.params.data, authenticatedRoleId);
     },
   });
 
@@ -435,9 +550,7 @@ export default {
 
   async bootstrap({ strapi }: { strapi: StrapiApp }) {
     const fs = require('fs');
-    const path = require('path');
-
-    const xlsPath = path.join(__dirname, '../../doc', 'LISTA ASISTENCIA REUNION ASAMBLEA 2026.xls');
+    const xlsPath = residentRoster.resolveRosterPath(process.cwd());
 
     try {
       await enableAuthenticatedPermissions(strapi);
@@ -458,6 +571,13 @@ export default {
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Error desconocido';
       strapi.log.error(`Fallo el registro del rol por defecto para usuarios: ${message}`);
+    }
+
+    try {
+      await ensureResidentCoefficientPrecision(strapi);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Error desconocido';
+      strapi.log.error(`Fallo el ajuste de precision para coeficiente: ${message}`);
     }
 
     try {

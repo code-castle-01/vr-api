@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-17T07:09:59.399Z",
+  "generatedAt": "2026-03-18T00:30:42.346Z",
   "baseUrl": "http://localhost:1337",
   "assemblyId": 5,
   "agendaItemId": 11,
@@ -11,2072 +11,2296 @@
     {
       "id": 4,
       "identifier": "M1-03",
-      "password": "VR-M1-03",
+      "password": "M1-03",
+      "residentAccessMode": "owner",
       "unit": "M1-03",
       "weight": 100
     },
     {
       "id": 5,
       "identifier": "M1-04",
-      "password": "VR-M1-04",
+      "password": "M1-04",
+      "residentAccessMode": "owner",
       "unit": "M1-04",
       "weight": 100
     },
     {
       "id": 6,
       "identifier": "M1-05",
-      "password": "VR-M1-05",
+      "password": "M1-05",
+      "residentAccessMode": "owner",
       "unit": "M1-05",
       "weight": 100
     },
     {
       "id": 7,
       "identifier": "M1-06",
-      "password": "VR-M1-06",
+      "password": "M1-06",
+      "residentAccessMode": "owner",
       "unit": "M1-06",
       "weight": 100
     },
     {
       "id": 8,
       "identifier": "M1-07",
-      "password": "VR-M1-07",
+      "password": "M1-07",
+      "residentAccessMode": "owner",
       "unit": "M1-07",
       "weight": 100
     },
     {
       "id": 9,
       "identifier": "M1-08",
-      "password": "VR-M1-08",
+      "password": "M1-08",
+      "residentAccessMode": "owner",
       "unit": "M1-08",
       "weight": 100
     },
     {
       "id": 10,
       "identifier": "M1-09",
-      "password": "VR-M1-09",
+      "password": "M1-09",
+      "residentAccessMode": "owner",
       "unit": "M1-09",
       "weight": 100
     },
     {
       "id": 11,
       "identifier": "M1-10",
-      "password": "VR-M1-10",
+      "password": "M1-10",
+      "residentAccessMode": "owner",
       "unit": "M1-10",
       "weight": 100
     },
     {
       "id": 12,
       "identifier": "M1-11",
-      "password": "VR-M1-11",
+      "password": "M1-11",
+      "residentAccessMode": "owner",
       "unit": "M1-11",
       "weight": 100
     },
     {
       "id": 13,
       "identifier": "M1-12",
-      "password": "VR-M1-12",
+      "password": "M1-12",
+      "residentAccessMode": "owner",
       "unit": "M1-12",
       "weight": 100
     },
     {
       "id": 14,
       "identifier": "M1-13",
-      "password": "VR-M1-13",
+      "password": "M1-13",
+      "residentAccessMode": "owner",
       "unit": "M1-13",
       "weight": 100
     },
     {
       "id": 15,
       "identifier": "M1-14",
-      "password": "VR-M1-14",
+      "password": "M1-14",
+      "residentAccessMode": "owner",
       "unit": "M1-14",
       "weight": 100
     },
     {
       "id": 16,
       "identifier": "M1-15",
-      "password": "VR-M1-15",
+      "password": "M1-15",
+      "residentAccessMode": "owner",
       "unit": "M1-15",
       "weight": 100
     },
     {
       "id": 17,
       "identifier": "M1-16",
-      "password": "VR-M1-16",
+      "password": "M1-16",
+      "residentAccessMode": "owner",
       "unit": "M1-16",
       "weight": 100
     },
     {
       "id": 18,
       "identifier": "M1-17",
-      "password": "VR-M1-17",
+      "password": "M1-17",
+      "residentAccessMode": "owner",
       "unit": "M1-17",
-      "weight": 100
-    },
-    {
-      "id": 20,
-      "identifier": "M2-01",
-      "password": "VR-M2-01",
-      "unit": "M2-01",
       "weight": 100
     },
     {
       "id": 21,
       "identifier": "M2-02",
-      "password": "VR-M2-02",
+      "password": "M2-02",
+      "residentAccessMode": "owner",
       "unit": "M2-02",
       "weight": 100
     },
     {
       "id": 22,
       "identifier": "M2-03",
-      "password": "VR-M2-03",
+      "password": "M2-03",
+      "residentAccessMode": "owner",
       "unit": "M2-03",
       "weight": 100
     },
     {
       "id": 23,
       "identifier": "M2-04",
-      "password": "VR-M2-04",
+      "password": "M2-04",
+      "residentAccessMode": "owner",
       "unit": "M2-04",
       "weight": 100
     },
     {
       "id": 24,
       "identifier": "M2-05",
-      "password": "VR-M2-05",
+      "password": "M2-05",
+      "residentAccessMode": "owner",
       "unit": "M2-05",
       "weight": 100
     },
     {
       "id": 25,
       "identifier": "M2-06",
-      "password": "VR-M2-06",
+      "password": "M2-06",
+      "residentAccessMode": "owner",
       "unit": "M2-06",
-      "weight": 100
-    },
-    {
-      "id": 26,
-      "identifier": "M2-07",
-      "password": "VR-M2-07",
-      "unit": "M2-07",
       "weight": 100
     },
     {
       "id": 27,
       "identifier": "M2-08",
-      "password": "VR-M2-08",
+      "password": "M2-08",
+      "residentAccessMode": "owner",
       "unit": "M2-08",
       "weight": 100
     },
     {
       "id": 28,
       "identifier": "M2-09",
-      "password": "VR-M2-09",
+      "password": "M2-09",
+      "residentAccessMode": "owner",
       "unit": "M2-09",
       "weight": 100
     },
     {
       "id": 29,
       "identifier": "M2-10",
-      "password": "VR-M2-10",
+      "password": "M2-10",
+      "residentAccessMode": "owner",
       "unit": "M2-10",
       "weight": 100
     },
     {
       "id": 30,
       "identifier": "M2-11",
-      "password": "VR-M2-11",
+      "password": "M2-11",
+      "residentAccessMode": "owner",
       "unit": "M2-11",
       "weight": 100
     },
     {
       "id": 31,
       "identifier": "M2-12",
-      "password": "VR-M2-12",
+      "password": "M2-12",
+      "residentAccessMode": "owner",
       "unit": "M2-12",
       "weight": 100
     },
     {
       "id": 32,
       "identifier": "M2-13",
-      "password": "VR-M2-13",
+      "password": "M2-13",
+      "residentAccessMode": "owner",
       "unit": "M2-13",
       "weight": 100
     },
     {
       "id": 33,
       "identifier": "M2-14",
-      "password": "VR-M2-14",
+      "password": "M2-14",
+      "residentAccessMode": "owner",
       "unit": "M2-14",
       "weight": 100
     },
     {
       "id": 34,
       "identifier": "M2-15",
-      "password": "VR-M2-15",
+      "password": "M2-15",
+      "residentAccessMode": "owner",
       "unit": "M2-15",
       "weight": 100
     },
     {
       "id": 35,
       "identifier": "M2-16",
-      "password": "VR-M2-16",
+      "password": "M2-16",
+      "residentAccessMode": "owner",
       "unit": "M2-16",
       "weight": 100
     },
     {
       "id": 36,
       "identifier": "M2-17",
-      "password": "VR-M2-17",
+      "password": "M2-17",
+      "residentAccessMode": "owner",
       "unit": "M2-17",
       "weight": 100
     },
     {
       "id": 37,
       "identifier": "M2-18",
-      "password": "VR-M2-18",
+      "password": "M2-18",
+      "residentAccessMode": "owner",
       "unit": "M2-18",
       "weight": 100
     },
     {
       "id": 38,
       "identifier": "M2-19",
-      "password": "VR-M2-19",
+      "password": "M2-19",
+      "residentAccessMode": "owner",
       "unit": "M2-19",
       "weight": 100
     },
     {
       "id": 39,
       "identifier": "M2-20",
-      "password": "VR-M2-20",
+      "password": "M2-20",
+      "residentAccessMode": "owner",
       "unit": "M2-20",
       "weight": 100
     },
     {
       "id": 40,
       "identifier": "M2-21",
-      "password": "VR-M2-21",
+      "password": "M2-21",
+      "residentAccessMode": "owner",
       "unit": "M2-21",
       "weight": 100
     },
     {
       "id": 41,
       "identifier": "M2-22",
-      "password": "VR-M2-22",
+      "password": "M2-22",
+      "residentAccessMode": "owner",
       "unit": "M2-22",
       "weight": 100
     },
     {
       "id": 42,
       "identifier": "M2-23",
-      "password": "VR-M2-23",
+      "password": "M2-23",
+      "residentAccessMode": "owner",
       "unit": "M2-23",
       "weight": 100
     },
     {
       "id": 43,
       "identifier": "M2-24",
-      "password": "VR-M2-24",
+      "password": "M2-24",
+      "residentAccessMode": "owner",
       "unit": "M2-24",
       "weight": 100
     },
     {
       "id": 44,
       "identifier": "M2-25",
-      "password": "VR-M2-25",
+      "password": "M2-25",
+      "residentAccessMode": "owner",
       "unit": "M2-25",
       "weight": 100
     },
     {
       "id": 45,
       "identifier": "M2-26",
-      "password": "VR-M2-26",
+      "password": "M2-26",
+      "residentAccessMode": "owner",
       "unit": "M2-26",
       "weight": 100
     },
     {
       "id": 46,
       "identifier": "M2-27",
-      "password": "VR-M2-27",
+      "password": "M2-27",
+      "residentAccessMode": "owner",
       "unit": "M2-27",
       "weight": 100
     },
     {
       "id": 47,
       "identifier": "M2-28",
-      "password": "VR-M2-28",
+      "password": "M2-28",
+      "residentAccessMode": "owner",
       "unit": "M2-28",
       "weight": 100
     },
     {
       "id": 48,
       "identifier": "M2-29",
-      "password": "VR-M2-29",
+      "password": "M2-29",
+      "residentAccessMode": "owner",
       "unit": "M2-29",
       "weight": 100
     },
     {
       "id": 49,
       "identifier": "M2-30",
-      "password": "VR-M2-30",
+      "password": "M2-30",
+      "residentAccessMode": "owner",
       "unit": "M2-30",
       "weight": 100
     },
     {
       "id": 50,
       "identifier": "M2-31",
-      "password": "VR-M2-31",
+      "password": "M2-31",
+      "residentAccessMode": "owner",
       "unit": "M2-31",
       "weight": 100
     },
     {
       "id": 51,
       "identifier": "M3-01",
-      "password": "VR-M3-01",
+      "password": "M3-01",
+      "residentAccessMode": "owner",
       "unit": "M3-01",
       "weight": 100
     },
     {
       "id": 52,
       "identifier": "M3-02",
-      "password": "VR-M3-02",
+      "password": "M3-02",
+      "residentAccessMode": "owner",
       "unit": "M3-02",
       "weight": 100
     },
     {
       "id": 53,
       "identifier": "M3-03",
-      "password": "VR-M3-03",
+      "password": "M3-03",
+      "residentAccessMode": "owner",
       "unit": "M3-03",
       "weight": 100
     },
     {
       "id": 54,
       "identifier": "M3-04",
-      "password": "VR-M3-04",
+      "password": "M3-04",
+      "residentAccessMode": "owner",
       "unit": "M3-04",
       "weight": 100
     },
     {
       "id": 55,
       "identifier": "M3-05",
-      "password": "VR-M3-05",
+      "password": "M3-05",
+      "residentAccessMode": "owner",
       "unit": "M3-05",
-      "weight": 100
-    },
-    {
-      "id": 56,
-      "identifier": "M3-06",
-      "password": "VR-M3-06",
-      "unit": "M3-06",
       "weight": 100
     },
     {
       "id": 57,
       "identifier": "M3-07",
-      "password": "VR-M3-07",
+      "password": "M3-07",
+      "residentAccessMode": "owner",
       "unit": "M3-07",
       "weight": 100
     },
     {
       "id": 58,
       "identifier": "M3-08",
-      "password": "VR-M3-08",
+      "password": "M3-08",
+      "residentAccessMode": "owner",
       "unit": "M3-08",
       "weight": 100
     },
     {
       "id": 59,
       "identifier": "M3-09",
-      "password": "VR-M3-09",
+      "password": "M3-09",
+      "residentAccessMode": "owner",
       "unit": "M3-09",
       "weight": 100
     },
     {
       "id": 60,
       "identifier": "M3-10",
-      "password": "VR-M3-10",
+      "password": "M3-10",
+      "residentAccessMode": "owner",
       "unit": "M3-10",
       "weight": 100
     },
     {
       "id": 61,
       "identifier": "M3-11",
-      "password": "VR-M3-11",
+      "password": "M3-11",
+      "residentAccessMode": "owner",
       "unit": "M3-11",
       "weight": 100
     },
     {
       "id": 62,
       "identifier": "M3-12",
-      "password": "VR-M3-12",
+      "password": "M3-12",
+      "residentAccessMode": "owner",
       "unit": "M3-12",
       "weight": 100
     },
     {
       "id": 63,
       "identifier": "M3-13",
-      "password": "VR-M3-13",
+      "password": "M3-13",
+      "residentAccessMode": "owner",
       "unit": "M3-13",
       "weight": 100
     },
     {
       "id": 64,
       "identifier": "M3-14",
-      "password": "VR-M3-14",
+      "password": "M3-14",
+      "residentAccessMode": "owner",
       "unit": "M3-14",
       "weight": 100
     },
     {
       "id": 65,
       "identifier": "M3-15",
-      "password": "VR-M3-15",
+      "password": "M3-15",
+      "residentAccessMode": "owner",
       "unit": "M3-15",
       "weight": 100
     },
     {
       "id": 66,
       "identifier": "M3-16",
-      "password": "VR-M3-16",
+      "password": "M3-16",
+      "residentAccessMode": "owner",
       "unit": "M3-16",
       "weight": 100
     },
     {
       "id": 67,
       "identifier": "M3-17",
-      "password": "VR-M3-17",
+      "password": "M3-17",
+      "residentAccessMode": "owner",
       "unit": "M3-17",
-      "weight": 100
-    },
-    {
-      "id": 68,
-      "identifier": "M3-18",
-      "password": "VR-M3-18",
-      "unit": "M3-18",
       "weight": 100
     },
     {
       "id": 69,
       "identifier": "M3-19",
-      "password": "VR-M3-19",
+      "password": "M3-19",
+      "residentAccessMode": "owner",
       "unit": "M3-19",
-      "weight": 100
-    },
-    {
-      "id": 70,
-      "identifier": "M3-20",
-      "password": "VR-M3-20",
-      "unit": "M3-20",
       "weight": 100
     },
     {
       "id": 71,
       "identifier": "M3-21",
-      "password": "VR-M3-21",
+      "password": "M3-21",
+      "residentAccessMode": "owner",
       "unit": "M3-21",
       "weight": 100
     },
     {
       "id": 72,
       "identifier": "M3-22",
-      "password": "VR-M3-22",
+      "password": "M3-22",
+      "residentAccessMode": "owner",
       "unit": "M3-22",
       "weight": 100
     },
     {
       "id": 73,
       "identifier": "M3-23",
-      "password": "VR-M3-23",
+      "password": "M3-23",
+      "residentAccessMode": "owner",
       "unit": "M3-23",
       "weight": 100
     },
     {
       "id": 74,
       "identifier": "M3-24",
-      "password": "VR-M3-24",
+      "password": "M3-24",
+      "residentAccessMode": "owner",
       "unit": "M3-24",
       "weight": 100
     },
     {
       "id": 75,
       "identifier": "M3-25",
-      "password": "VR-M3-25",
+      "password": "M3-25",
+      "residentAccessMode": "owner",
       "unit": "M3-25",
       "weight": 100
     },
     {
       "id": 76,
       "identifier": "M3-26",
-      "password": "VR-M3-26",
+      "password": "M3-26",
+      "residentAccessMode": "owner",
       "unit": "M3-26",
       "weight": 100
     },
     {
       "id": 77,
       "identifier": "M3-27",
-      "password": "VR-M3-27",
+      "password": "M3-27",
+      "residentAccessMode": "owner",
       "unit": "M3-27",
       "weight": 100
     },
     {
       "id": 78,
       "identifier": "M3-28",
-      "password": "VR-M3-28",
+      "password": "M3-28",
+      "residentAccessMode": "owner",
       "unit": "M3-28",
       "weight": 100
     },
     {
       "id": 79,
       "identifier": "M3-29",
-      "password": "VR-M3-29",
+      "password": "M3-29",
+      "residentAccessMode": "owner",
       "unit": "M3-29",
       "weight": 100
     },
     {
       "id": 80,
       "identifier": "M3-30",
-      "password": "VR-M3-30",
+      "password": "M3-30",
+      "residentAccessMode": "owner",
       "unit": "M3-30",
       "weight": 100
     },
     {
       "id": 81,
       "identifier": "M3-31",
-      "password": "VR-M3-31",
+      "password": "M3-31",
+      "residentAccessMode": "owner",
       "unit": "M3-31",
       "weight": 100
     },
     {
       "id": 82,
       "identifier": "M3-32",
-      "password": "VR-M3-32",
+      "password": "M3-32",
+      "residentAccessMode": "owner",
       "unit": "M3-32",
       "weight": 100
     },
     {
       "id": 83,
       "identifier": "M3-33",
-      "password": "VR-M3-33",
+      "password": "M3-33",
+      "residentAccessMode": "owner",
       "unit": "M3-33",
       "weight": 100
     },
     {
       "id": 84,
       "identifier": "M3-34",
-      "password": "VR-M3-34",
+      "password": "M3-34",
+      "residentAccessMode": "owner",
       "unit": "M3-34",
       "weight": 100
     },
     {
       "id": 85,
       "identifier": "M3-35",
-      "password": "VR-M3-35",
+      "password": "M3-35",
+      "residentAccessMode": "owner",
       "unit": "M3-35",
       "weight": 100
     },
     {
       "id": 86,
       "identifier": "M3-36",
-      "password": "VR-M3-36",
+      "password": "M3-36",
+      "residentAccessMode": "owner",
       "unit": "M3-36",
       "weight": 100
     },
     {
       "id": 87,
       "identifier": "M3-37",
-      "password": "VR-M3-37",
+      "password": "M3-37",
+      "residentAccessMode": "owner",
       "unit": "M3-37",
       "weight": 100
     },
     {
       "id": 88,
       "identifier": "M3-38",
-      "password": "VR-M3-38",
+      "password": "M3-38",
+      "residentAccessMode": "owner",
       "unit": "M3-38",
       "weight": 100
     },
     {
       "id": 89,
       "identifier": "M3-39",
-      "password": "VR-M3-39",
+      "password": "M3-39",
+      "residentAccessMode": "owner",
       "unit": "M3-39",
       "weight": 100
     },
     {
       "id": 90,
       "identifier": "M3-40",
-      "password": "VR-M3-40",
+      "password": "M3-40",
+      "residentAccessMode": "owner",
       "unit": "M3-40",
       "weight": 100
     },
     {
       "id": 91,
       "identifier": "M3-41",
-      "password": "VR-M3-41",
+      "password": "M3-41",
+      "residentAccessMode": "owner",
       "unit": "M3-41",
       "weight": 100
     },
     {
       "id": 92,
       "identifier": "M3-42",
-      "password": "VR-M3-42",
+      "password": "M3-42",
+      "residentAccessMode": "owner",
       "unit": "M3-42",
       "weight": 100
     },
     {
       "id": 93,
       "identifier": "M3-43",
-      "password": "VR-M3-43",
+      "password": "M3-43",
+      "residentAccessMode": "owner",
       "unit": "M3-43",
       "weight": 100
     },
     {
       "id": 94,
       "identifier": "M3-44",
-      "password": "VR-M3-44",
+      "password": "M3-44",
+      "residentAccessMode": "owner",
       "unit": "M3-44",
       "weight": 100
     },
     {
       "id": 95,
       "identifier": "M3-45",
-      "password": "VR-M3-45",
+      "password": "M3-45",
+      "residentAccessMode": "owner",
       "unit": "M3-45",
       "weight": 100
     },
     {
       "id": 96,
       "identifier": "M3-46",
-      "password": "VR-M3-46",
+      "password": "M3-46",
+      "residentAccessMode": "owner",
       "unit": "M3-46",
       "weight": 100
     },
     {
       "id": 97,
       "identifier": "M3-47",
-      "password": "VR-M3-47",
+      "password": "M3-47",
+      "residentAccessMode": "owner",
       "unit": "M3-47",
       "weight": 100
     },
     {
       "id": 98,
       "identifier": "M3-48",
-      "password": "VR-M3-48",
+      "password": "M3-48",
+      "residentAccessMode": "owner",
       "unit": "M3-48",
       "weight": 100
     },
     {
       "id": 99,
       "identifier": "M3-49",
-      "password": "VR-M3-49",
+      "password": "M3-49",
+      "residentAccessMode": "owner",
       "unit": "M3-49",
-      "weight": 100
-    },
-    {
-      "id": 100,
-      "identifier": "M3-50",
-      "password": "VR-M3-50",
-      "unit": "M3-50",
       "weight": 100
     },
     {
       "id": 101,
       "identifier": "M3-51",
-      "password": "VR-M3-51",
+      "password": "M3-51",
+      "residentAccessMode": "owner",
       "unit": "M3-51",
       "weight": 100
     },
     {
       "id": 102,
       "identifier": "M3-52",
-      "password": "VR-M3-52",
+      "password": "M3-52",
+      "residentAccessMode": "owner",
       "unit": "M3-52",
       "weight": 100
     },
     {
       "id": 103,
       "identifier": "M3-53",
-      "password": "VR-M3-53",
+      "password": "M3-53",
+      "residentAccessMode": "owner",
       "unit": "M3-53",
       "weight": 100
     },
     {
       "id": 104,
       "identifier": "M4-01",
-      "password": "VR-M4-01",
+      "password": "M4-01",
+      "residentAccessMode": "owner",
       "unit": "M4-01",
       "weight": 100
     },
     {
       "id": 105,
       "identifier": "M4-02",
-      "password": "VR-M4-02",
+      "password": "M4-02",
+      "residentAccessMode": "owner",
       "unit": "M4-02",
-      "weight": 100
-    },
-    {
-      "id": 106,
-      "identifier": "M4-03",
-      "password": "VR-M4-03",
-      "unit": "M4-03",
       "weight": 100
     },
     {
       "id": 107,
       "identifier": "M4-04",
-      "password": "VR-M4-04",
+      "password": "M4-04",
+      "residentAccessMode": "owner",
       "unit": "M4-04",
       "weight": 100
     },
     {
       "id": 108,
       "identifier": "M4-05",
-      "password": "VR-M4-05",
+      "password": "M4-05",
+      "residentAccessMode": "owner",
       "unit": "M4-05",
       "weight": 100
     },
     {
       "id": 109,
       "identifier": "M4-06",
-      "password": "VR-M4-06",
+      "password": "M4-06",
+      "residentAccessMode": "owner",
       "unit": "M4-06",
       "weight": 100
     },
     {
       "id": 110,
       "identifier": "M4-07",
-      "password": "VR-M4-07",
+      "password": "M4-07",
+      "residentAccessMode": "owner",
       "unit": "M4-07",
       "weight": 100
     },
     {
       "id": 111,
       "identifier": "M4-08",
-      "password": "VR-M4-08",
+      "password": "M4-08",
+      "residentAccessMode": "owner",
       "unit": "M4-08",
       "weight": 100
     },
     {
       "id": 112,
       "identifier": "M4-09",
-      "password": "VR-M4-09",
+      "password": "M4-09",
+      "residentAccessMode": "owner",
       "unit": "M4-09",
       "weight": 100
     },
     {
       "id": 113,
       "identifier": "M4-10",
-      "password": "VR-M4-10",
+      "password": "M4-10",
+      "residentAccessMode": "owner",
       "unit": "M4-10",
       "weight": 100
     },
     {
       "id": 114,
       "identifier": "M4-11",
-      "password": "VR-M4-11",
+      "password": "M4-11",
+      "residentAccessMode": "owner",
       "unit": "M4-11",
       "weight": 100
     },
     {
       "id": 115,
       "identifier": "M4-12",
-      "password": "VR-M4-12",
+      "password": "M4-12",
+      "residentAccessMode": "owner",
       "unit": "M4-12",
       "weight": 100
     },
     {
       "id": 116,
       "identifier": "M4-13",
-      "password": "VR-M4-13",
+      "password": "M4-13",
+      "residentAccessMode": "owner",
       "unit": "M4-13",
       "weight": 100
     },
     {
       "id": 117,
       "identifier": "M4-14",
-      "password": "VR-M4-14",
+      "password": "M4-14",
+      "residentAccessMode": "owner",
       "unit": "M4-14",
       "weight": 100
     },
     {
       "id": 118,
       "identifier": "M4-15",
-      "password": "VR-M4-15",
+      "password": "M4-15",
+      "residentAccessMode": "owner",
       "unit": "M4-15",
       "weight": 100
     },
     {
       "id": 119,
       "identifier": "M4-16",
-      "password": "VR-M4-16",
+      "password": "M4-16",
+      "residentAccessMode": "owner",
       "unit": "M4-16",
       "weight": 100
     },
     {
       "id": 120,
       "identifier": "M4-17",
-      "password": "VR-M4-17",
+      "password": "M4-17",
+      "residentAccessMode": "owner",
       "unit": "M4-17",
       "weight": 100
     },
     {
       "id": 121,
       "identifier": "M4-18",
-      "password": "VR-M4-18",
+      "password": "M4-18",
+      "residentAccessMode": "owner",
       "unit": "M4-18",
-      "weight": 100
-    },
-    {
-      "id": 122,
-      "identifier": "M4-19",
-      "password": "VR-M4-19",
-      "unit": "M4-19",
       "weight": 100
     },
     {
       "id": 123,
       "identifier": "M4-20",
-      "password": "VR-M4-20",
+      "password": "M4-20",
+      "residentAccessMode": "owner",
       "unit": "M4-20",
       "weight": 100
     },
     {
       "id": 124,
       "identifier": "M4-21",
-      "password": "VR-M4-21",
+      "password": "M4-21",
+      "residentAccessMode": "owner",
       "unit": "M4-21",
       "weight": 100
     },
     {
       "id": 125,
       "identifier": "M4-22",
-      "password": "VR-M4-22",
+      "password": "M4-22",
+      "residentAccessMode": "owner",
       "unit": "M4-22",
       "weight": 100
     },
     {
       "id": 126,
       "identifier": "M4-23",
-      "password": "VR-M4-23",
+      "password": "M4-23",
+      "residentAccessMode": "owner",
       "unit": "M4-23",
       "weight": 100
     },
     {
       "id": 127,
       "identifier": "M4-24",
-      "password": "VR-M4-24",
+      "password": "M4-24",
+      "residentAccessMode": "owner",
       "unit": "M4-24",
       "weight": 100
     },
     {
       "id": 128,
       "identifier": "M4-25",
-      "password": "VR-M4-25",
+      "password": "M4-25",
+      "residentAccessMode": "owner",
       "unit": "M4-25",
       "weight": 100
     },
     {
       "id": 129,
       "identifier": "M4-26",
-      "password": "VR-M4-26",
+      "password": "M4-26",
+      "residentAccessMode": "owner",
       "unit": "M4-26",
       "weight": 100
     },
     {
       "id": 130,
       "identifier": "M4-27",
-      "password": "VR-M4-27",
+      "password": "M4-27",
+      "residentAccessMode": "owner",
       "unit": "M4-27",
       "weight": 100
     },
     {
       "id": 131,
       "identifier": "M4-28",
-      "password": "VR-M4-28",
+      "password": "M4-28",
+      "residentAccessMode": "owner",
       "unit": "M4-28",
       "weight": 100
     },
     {
       "id": 132,
       "identifier": "M4-29",
-      "password": "VR-M4-29",
+      "password": "M4-29",
+      "residentAccessMode": "owner",
       "unit": "M4-29",
       "weight": 100
     },
     {
       "id": 133,
       "identifier": "M4-30",
-      "password": "VR-M4-30",
+      "password": "M4-30",
+      "residentAccessMode": "owner",
       "unit": "M4-30",
       "weight": 100
     },
     {
       "id": 134,
       "identifier": "M4-31",
-      "password": "VR-M4-31",
+      "password": "M4-31",
+      "residentAccessMode": "owner",
       "unit": "M4-31",
       "weight": 100
     },
     {
       "id": 135,
       "identifier": "M4-32",
-      "password": "VR-M4-32",
+      "password": "M4-32",
+      "residentAccessMode": "owner",
       "unit": "M4-32",
       "weight": 100
     },
     {
       "id": 136,
       "identifier": "M4-33",
-      "password": "VR-M4-33",
+      "password": "M4-33",
+      "residentAccessMode": "owner",
       "unit": "M4-33",
       "weight": 100
     },
     {
       "id": 137,
       "identifier": "M4-34",
-      "password": "VR-M4-34",
+      "password": "M4-34",
+      "residentAccessMode": "owner",
       "unit": "M4-34",
       "weight": 100
     },
     {
       "id": 138,
       "identifier": "M4-35",
-      "password": "VR-M4-35",
+      "password": "M4-35",
+      "residentAccessMode": "owner",
       "unit": "M4-35",
       "weight": 100
     },
     {
       "id": 139,
       "identifier": "M4-36",
-      "password": "VR-M4-36",
+      "password": "M4-36",
+      "residentAccessMode": "owner",
       "unit": "M4-36",
       "weight": 100
     },
     {
       "id": 140,
       "identifier": "M4-37",
-      "password": "VR-M4-37",
+      "password": "M4-37",
+      "residentAccessMode": "owner",
       "unit": "M4-37",
       "weight": 100
     },
     {
       "id": 141,
       "identifier": "M4-38",
-      "password": "VR-M4-38",
+      "password": "M4-38",
+      "residentAccessMode": "owner",
       "unit": "M4-38",
       "weight": 100
     },
     {
       "id": 142,
       "identifier": "M4-39",
-      "password": "VR-M4-39",
+      "password": "M4-39",
+      "residentAccessMode": "owner",
       "unit": "M4-39",
       "weight": 100
     },
     {
       "id": 143,
       "identifier": "M4-40",
-      "password": "VR-M4-40",
+      "password": "M4-40",
+      "residentAccessMode": "owner",
       "unit": "M4-40",
       "weight": 100
     },
     {
       "id": 144,
       "identifier": "M4-41",
-      "password": "VR-M4-41",
+      "password": "M4-41",
+      "residentAccessMode": "owner",
       "unit": "M4-41",
       "weight": 100
     },
     {
       "id": 145,
       "identifier": "M4-42",
-      "password": "VR-M4-42",
+      "password": "M4-42",
+      "residentAccessMode": "owner",
       "unit": "M4-42",
       "weight": 100
     },
     {
       "id": 146,
       "identifier": "M4-43",
-      "password": "VR-M4-43",
+      "password": "M4-43",
+      "residentAccessMode": "owner",
       "unit": "M4-43",
       "weight": 100
     },
     {
       "id": 147,
       "identifier": "M4-44",
-      "password": "VR-M4-44",
+      "password": "M4-44",
+      "residentAccessMode": "owner",
       "unit": "M4-44",
       "weight": 100
     },
     {
       "id": 148,
       "identifier": "M4-45",
-      "password": "VR-M4-45",
+      "password": "M4-45",
+      "residentAccessMode": "owner",
       "unit": "M4-45",
       "weight": 100
     },
     {
       "id": 149,
       "identifier": "M4-46",
-      "password": "VR-M4-46",
+      "password": "M4-46",
+      "residentAccessMode": "owner",
       "unit": "M4-46",
       "weight": 100
     },
     {
       "id": 150,
       "identifier": "M4-47",
-      "password": "VR-M4-47",
+      "password": "M4-47",
+      "residentAccessMode": "owner",
       "unit": "M4-47",
       "weight": 100
     },
     {
       "id": 151,
       "identifier": "M4-48",
-      "password": "VR-M4-48",
+      "password": "M4-48",
+      "residentAccessMode": "owner",
       "unit": "M4-48",
       "weight": 100
     },
     {
       "id": 152,
       "identifier": "M4-49",
-      "password": "VR-M4-49",
+      "password": "M4-49",
+      "residentAccessMode": "owner",
       "unit": "M4-49",
       "weight": 100
     },
     {
       "id": 153,
       "identifier": "M4-50",
-      "password": "VR-M4-50",
+      "password": "M4-50",
+      "residentAccessMode": "owner",
       "unit": "M4-50",
       "weight": 100
     },
     {
       "id": 154,
       "identifier": "M5-01",
-      "password": "VR-M5-01",
+      "password": "M5-01",
+      "residentAccessMode": "owner",
       "unit": "M5-01",
       "weight": 100
     },
     {
       "id": 155,
       "identifier": "M5-02",
-      "password": "VR-M5-02",
+      "password": "M5-02",
+      "residentAccessMode": "owner",
       "unit": "M5-02",
       "weight": 100
     },
     {
       "id": 156,
       "identifier": "M5-03",
-      "password": "VR-M5-03",
+      "password": "M5-03",
+      "residentAccessMode": "owner",
       "unit": "M5-03",
       "weight": 100
     },
     {
       "id": 157,
       "identifier": "M5-04",
-      "password": "VR-M5-04",
+      "password": "M5-04",
+      "residentAccessMode": "owner",
       "unit": "M5-04",
       "weight": 100
     },
     {
       "id": 158,
       "identifier": "M5-05",
-      "password": "VR-M5-05",
+      "password": "M5-05",
+      "residentAccessMode": "owner",
       "unit": "M5-05",
       "weight": 100
     },
     {
       "id": 159,
       "identifier": "M5-06",
-      "password": "VR-M5-06",
+      "password": "M5-06",
+      "residentAccessMode": "owner",
       "unit": "M5-06",
       "weight": 100
     },
     {
       "id": 160,
       "identifier": "M5-07",
-      "password": "VR-M5-07",
+      "password": "M5-07",
+      "residentAccessMode": "owner",
       "unit": "M5-07",
       "weight": 100
     },
     {
       "id": 161,
       "identifier": "M5-08",
-      "password": "VR-M5-08",
+      "password": "M5-08",
+      "residentAccessMode": "owner",
       "unit": "M5-08",
       "weight": 100
     },
     {
       "id": 162,
       "identifier": "M5-09",
-      "password": "VR-M5-09",
+      "password": "M5-09",
+      "residentAccessMode": "owner",
       "unit": "M5-09",
       "weight": 100
     },
     {
       "id": 163,
       "identifier": "M5-10",
-      "password": "VR-M5-10",
+      "password": "M5-10",
+      "residentAccessMode": "owner",
       "unit": "M5-10",
       "weight": 100
     },
     {
       "id": 164,
       "identifier": "M5-11",
-      "password": "VR-M5-11",
+      "password": "M5-11",
+      "residentAccessMode": "owner",
       "unit": "M5-11",
       "weight": 100
     },
     {
       "id": 165,
       "identifier": "M5-12",
-      "password": "VR-M5-12",
+      "password": "M5-12",
+      "residentAccessMode": "owner",
       "unit": "M5-12",
       "weight": 100
     },
     {
       "id": 166,
       "identifier": "M5-13",
-      "password": "VR-M5-13",
+      "password": "M5-13",
+      "residentAccessMode": "owner",
       "unit": "M5-13",
       "weight": 100
     },
     {
       "id": 167,
       "identifier": "M5-14",
-      "password": "VR-M5-14",
+      "password": "M5-14",
+      "residentAccessMode": "owner",
       "unit": "M5-14",
       "weight": 100
     },
     {
       "id": 168,
       "identifier": "M5-15",
-      "password": "VR-M5-15",
+      "password": "M5-15",
+      "residentAccessMode": "owner",
       "unit": "M5-15",
       "weight": 100
     },
     {
       "id": 169,
       "identifier": "M5-16",
-      "password": "VR-M5-16",
+      "password": "M5-16",
+      "residentAccessMode": "owner",
       "unit": "M5-16",
       "weight": 100
     },
     {
       "id": 170,
       "identifier": "M5-17",
-      "password": "VR-M5-17",
+      "password": "M5-17",
+      "residentAccessMode": "owner",
       "unit": "M5-17",
-      "weight": 100
-    },
-    {
-      "id": 171,
-      "identifier": "M5-18",
-      "password": "VR-M5-18",
-      "unit": "M5-18",
       "weight": 100
     },
     {
       "id": 172,
       "identifier": "M5-19",
-      "password": "VR-M5-19",
+      "password": "M5-19",
+      "residentAccessMode": "owner",
       "unit": "M5-19",
       "weight": 100
     },
     {
       "id": 173,
       "identifier": "M5-20",
-      "password": "VR-M5-20",
+      "password": "M5-20",
+      "residentAccessMode": "owner",
       "unit": "M5-20",
       "weight": 100
     },
     {
       "id": 174,
       "identifier": "M5-21",
-      "password": "VR-M5-21",
+      "password": "M5-21",
+      "residentAccessMode": "owner",
       "unit": "M5-21",
       "weight": 100
     },
     {
       "id": 175,
       "identifier": "M5-22",
-      "password": "VR-M5-22",
+      "password": "M5-22",
+      "residentAccessMode": "owner",
       "unit": "M5-22",
       "weight": 100
     },
     {
       "id": 176,
       "identifier": "M5-23",
-      "password": "VR-M5-23",
+      "password": "M5-23",
+      "residentAccessMode": "owner",
       "unit": "M5-23",
       "weight": 100
     },
     {
       "id": 177,
       "identifier": "M5-24",
-      "password": "VR-M5-24",
+      "password": "M5-24",
+      "residentAccessMode": "owner",
       "unit": "M5-24",
       "weight": 100
     },
     {
       "id": 178,
       "identifier": "M5-25",
-      "password": "VR-M5-25",
+      "password": "M5-25",
+      "residentAccessMode": "owner",
       "unit": "M5-25",
       "weight": 100
     },
     {
       "id": 179,
       "identifier": "M5-26",
-      "password": "VR-M5-26",
+      "password": "M5-26",
+      "residentAccessMode": "owner",
       "unit": "M5-26",
       "weight": 100
     },
     {
       "id": 180,
       "identifier": "M5-27",
-      "password": "VR-M5-27",
+      "password": "M5-27",
+      "residentAccessMode": "owner",
       "unit": "M5-27",
       "weight": 100
     },
     {
       "id": 181,
       "identifier": "M5-28",
-      "password": "VR-M5-28",
+      "password": "M5-28",
+      "residentAccessMode": "owner",
       "unit": "M5-28",
       "weight": 100
     },
     {
       "id": 182,
       "identifier": "M5-29",
-      "password": "VR-M5-29",
+      "password": "M5-29",
+      "residentAccessMode": "owner",
       "unit": "M5-29",
       "weight": 100
     },
     {
       "id": 183,
       "identifier": "M5-30",
-      "password": "VR-M5-30",
+      "password": "M5-30",
+      "residentAccessMode": "owner",
       "unit": "M5-30",
       "weight": 100
     },
     {
       "id": 184,
       "identifier": "M5-31",
-      "password": "VR-M5-31",
+      "password": "M5-31",
+      "residentAccessMode": "owner",
       "unit": "M5-31",
       "weight": 100
     },
     {
       "id": 185,
       "identifier": "M5-32",
-      "password": "VR-M5-32",
+      "password": "M5-32",
+      "residentAccessMode": "owner",
       "unit": "M5-32",
       "weight": 100
     },
     {
       "id": 186,
       "identifier": "M5-33",
-      "password": "VR-M5-33",
+      "password": "M5-33",
+      "residentAccessMode": "owner",
       "unit": "M5-33",
       "weight": 100
     },
     {
       "id": 187,
       "identifier": "M5-34",
-      "password": "VR-M5-34",
+      "password": "M5-34",
+      "residentAccessMode": "owner",
       "unit": "M5-34",
       "weight": 100
     },
     {
       "id": 188,
       "identifier": "M5-35",
-      "password": "VR-M5-35",
+      "password": "M5-35",
+      "residentAccessMode": "owner",
       "unit": "M5-35",
       "weight": 100
     },
     {
       "id": 189,
       "identifier": "M5-36",
-      "password": "VR-M5-36",
+      "password": "M5-36",
+      "residentAccessMode": "owner",
       "unit": "M5-36",
       "weight": 100
     },
     {
       "id": 190,
       "identifier": "M5-37",
-      "password": "VR-M5-37",
+      "password": "M5-37",
+      "residentAccessMode": "owner",
       "unit": "M5-37",
       "weight": 100
     },
     {
       "id": 191,
       "identifier": "M5-38",
-      "password": "VR-M5-38",
+      "password": "M5-38",
+      "residentAccessMode": "owner",
       "unit": "M5-38",
       "weight": 100
     },
     {
       "id": 192,
       "identifier": "M5-39",
-      "password": "VR-M5-39",
+      "password": "M5-39",
+      "residentAccessMode": "owner",
       "unit": "M5-39",
       "weight": 100
     },
     {
       "id": 193,
       "identifier": "M6-01",
-      "password": "VR-M6-01",
+      "password": "M6-01",
+      "residentAccessMode": "owner",
       "unit": "M6-01",
       "weight": 100
     },
     {
       "id": 194,
       "identifier": "M6-02",
-      "password": "VR-M6-02",
+      "password": "M6-02",
+      "residentAccessMode": "owner",
       "unit": "M6-02",
       "weight": 100
     },
     {
       "id": 195,
       "identifier": "M6-03",
-      "password": "VR-M6-03",
+      "password": "M6-03",
+      "residentAccessMode": "owner",
       "unit": "M6-03",
       "weight": 100
     },
     {
       "id": 196,
       "identifier": "M6-04",
-      "password": "VR-M6-04",
+      "password": "M6-04",
+      "residentAccessMode": "owner",
       "unit": "M6-04",
       "weight": 100
     },
     {
       "id": 197,
       "identifier": "M6-05",
-      "password": "VR-M6-05",
+      "password": "M6-05",
+      "residentAccessMode": "owner",
       "unit": "M6-05",
       "weight": 100
     },
     {
       "id": 198,
       "identifier": "M6-06",
-      "password": "VR-M6-06",
+      "password": "M6-06",
+      "residentAccessMode": "owner",
       "unit": "M6-06",
       "weight": 100
     },
     {
       "id": 199,
       "identifier": "M6-07",
-      "password": "VR-M6-07",
+      "password": "M6-07",
+      "residentAccessMode": "owner",
       "unit": "M6-07",
       "weight": 100
     },
     {
       "id": 200,
       "identifier": "M6-08",
-      "password": "VR-M6-08",
+      "password": "M6-08",
+      "residentAccessMode": "owner",
       "unit": "M6-08",
       "weight": 100
     },
     {
       "id": 201,
       "identifier": "M6-09",
-      "password": "VR-M6-09",
+      "password": "M6-09",
+      "residentAccessMode": "owner",
       "unit": "M6-09",
       "weight": 100
     },
     {
       "id": 202,
       "identifier": "M6-10",
-      "password": "VR-M6-10",
+      "password": "M6-10",
+      "residentAccessMode": "owner",
       "unit": "M6-10",
       "weight": 100
     },
     {
       "id": 203,
       "identifier": "M6-11",
-      "password": "VR-M6-11",
+      "password": "M6-11",
+      "residentAccessMode": "owner",
       "unit": "M6-11",
       "weight": 100
     },
     {
       "id": 204,
       "identifier": "M6-12",
-      "password": "VR-M6-12",
+      "password": "M6-12",
+      "residentAccessMode": "owner",
       "unit": "M6-12",
       "weight": 100
     },
     {
       "id": 205,
       "identifier": "M6-13",
-      "password": "VR-M6-13",
+      "password": "M6-13",
+      "residentAccessMode": "owner",
       "unit": "M6-13",
       "weight": 100
     },
     {
       "id": 206,
       "identifier": "M6-14",
-      "password": "VR-M6-14",
+      "password": "M6-14",
+      "residentAccessMode": "owner",
       "unit": "M6-14",
       "weight": 100
     },
     {
       "id": 207,
       "identifier": "M6-15",
-      "password": "VR-M6-15",
+      "password": "M6-15",
+      "residentAccessMode": "owner",
       "unit": "M6-15",
       "weight": 100
     },
     {
       "id": 208,
       "identifier": "M6-16",
-      "password": "VR-M6-16",
+      "password": "M6-16",
+      "residentAccessMode": "owner",
       "unit": "M6-16",
       "weight": 100
     },
     {
       "id": 209,
       "identifier": "M6-17",
-      "password": "VR-M6-17",
+      "password": "M6-17",
+      "residentAccessMode": "owner",
       "unit": "M6-17",
       "weight": 100
     },
     {
       "id": 210,
       "identifier": "M6-18",
-      "password": "VR-M6-18",
+      "password": "M6-18",
+      "residentAccessMode": "owner",
       "unit": "M6-18",
       "weight": 100
     },
     {
       "id": 211,
       "identifier": "M6-19",
-      "password": "VR-M6-19",
+      "password": "M6-19",
+      "residentAccessMode": "owner",
       "unit": "M6-19",
       "weight": 100
     },
     {
       "id": 212,
       "identifier": "M6-20",
-      "password": "VR-M6-20",
+      "password": "M6-20",
+      "residentAccessMode": "owner",
       "unit": "M6-20",
       "weight": 100
     },
     {
       "id": 213,
       "identifier": "M6-21",
-      "password": "VR-M6-21",
+      "password": "M6-21",
+      "residentAccessMode": "owner",
       "unit": "M6-21",
       "weight": 100
     },
     {
       "id": 214,
       "identifier": "M6-22",
-      "password": "VR-M6-22",
+      "password": "M6-22",
+      "residentAccessMode": "owner",
       "unit": "M6-22",
       "weight": 100
     },
     {
       "id": 215,
       "identifier": "M6-23",
-      "password": "VR-M6-23",
+      "password": "M6-23",
+      "residentAccessMode": "owner",
       "unit": "M6-23",
       "weight": 100
     },
     {
       "id": 216,
       "identifier": "M6-24",
-      "password": "VR-M6-24",
+      "password": "M6-24",
+      "residentAccessMode": "owner",
       "unit": "M6-24",
       "weight": 100
     },
     {
       "id": 217,
       "identifier": "M6-25",
-      "password": "VR-M6-25",
+      "password": "M6-25",
+      "residentAccessMode": "owner",
       "unit": "M6-25",
       "weight": 100
     },
     {
       "id": 218,
       "identifier": "M6-26",
-      "password": "VR-M6-26",
+      "password": "M6-26",
+      "residentAccessMode": "owner",
       "unit": "M6-26",
       "weight": 100
     },
     {
       "id": 219,
       "identifier": "M6-27",
-      "password": "VR-M6-27",
+      "password": "M6-27",
+      "residentAccessMode": "owner",
       "unit": "M6-27",
       "weight": 100
     },
     {
       "id": 220,
       "identifier": "M6-28",
-      "password": "VR-M6-28",
+      "password": "M6-28",
+      "residentAccessMode": "owner",
       "unit": "M6-28",
       "weight": 100
     },
     {
       "id": 221,
       "identifier": "M6-29",
-      "password": "VR-M6-29",
+      "password": "M6-29",
+      "residentAccessMode": "owner",
       "unit": "M6-29",
       "weight": 100
     },
     {
       "id": 222,
       "identifier": "M6-30",
-      "password": "VR-M6-30",
+      "password": "M6-30",
+      "residentAccessMode": "owner",
       "unit": "M6-30",
       "weight": 100
     },
     {
       "id": 223,
       "identifier": "M6-31",
-      "password": "VR-M6-31",
+      "password": "M6-31",
+      "residentAccessMode": "owner",
       "unit": "M6-31",
       "weight": 100
     },
     {
       "id": 224,
       "identifier": "M6-32",
-      "password": "VR-M6-32",
+      "password": "M6-32",
+      "residentAccessMode": "owner",
       "unit": "M6-32",
       "weight": 100
     },
     {
       "id": 225,
       "identifier": "M6-33",
-      "password": "VR-M6-33",
+      "password": "M6-33",
+      "residentAccessMode": "owner",
       "unit": "M6-33",
       "weight": 100
     },
     {
       "id": 226,
       "identifier": "M6-34",
-      "password": "VR-M6-34",
+      "password": "M6-34",
+      "residentAccessMode": "owner",
       "unit": "M6-34",
       "weight": 100
     },
     {
       "id": 227,
       "identifier": "M6-35",
-      "password": "VR-M6-35",
+      "password": "M6-35",
+      "residentAccessMode": "owner",
       "unit": "M6-35",
       "weight": 100
     },
     {
       "id": 228,
       "identifier": "M6-36",
-      "password": "VR-M6-36",
+      "password": "M6-36",
+      "residentAccessMode": "owner",
       "unit": "M6-36",
       "weight": 100
     },
     {
       "id": 229,
       "identifier": "M6-37",
-      "password": "VR-M6-37",
+      "password": "M6-37",
+      "residentAccessMode": "owner",
       "unit": "M6-37",
       "weight": 100
     },
     {
       "id": 230,
       "identifier": "M6-38",
-      "password": "VR-M6-38",
+      "password": "M6-38",
+      "residentAccessMode": "owner",
       "unit": "M6-38",
       "weight": 100
     },
     {
       "id": 231,
       "identifier": "M6-39",
-      "password": "VR-M6-39",
+      "password": "M6-39",
+      "residentAccessMode": "owner",
       "unit": "M6-39",
       "weight": 100
     },
     {
       "id": 232,
       "identifier": "M6-40",
-      "password": "VR-M6-40",
+      "password": "M6-40",
+      "residentAccessMode": "owner",
       "unit": "M6-40",
       "weight": 100
     },
     {
       "id": 233,
       "identifier": "M6-41",
-      "password": "VR-M6-41",
+      "password": "M6-41",
+      "residentAccessMode": "owner",
       "unit": "M6-41",
       "weight": 100
     },
     {
       "id": 234,
       "identifier": "M6-42",
-      "password": "VR-M6-42",
+      "password": "M6-42",
+      "residentAccessMode": "owner",
       "unit": "M6-42",
       "weight": 100
     },
     {
       "id": 235,
       "identifier": "M6-43",
-      "password": "VR-M6-43",
+      "password": "M6-43",
+      "residentAccessMode": "owner",
       "unit": "M6-43",
       "weight": 100
     },
     {
       "id": 236,
       "identifier": "M6-44",
-      "password": "VR-M6-44",
+      "password": "M6-44",
+      "residentAccessMode": "owner",
       "unit": "M6-44",
       "weight": 100
     },
     {
       "id": 237,
       "identifier": "M6-45",
-      "password": "VR-M6-45",
+      "password": "M6-45",
+      "residentAccessMode": "owner",
       "unit": "M6-45",
       "weight": 100
     },
     {
       "id": 238,
       "identifier": "M6-46",
-      "password": "VR-M6-46",
+      "password": "M6-46",
+      "residentAccessMode": "owner",
       "unit": "M6-46",
       "weight": 100
     },
     {
       "id": 239,
       "identifier": "M6-47",
-      "password": "VR-M6-47",
+      "password": "M6-47",
+      "residentAccessMode": "owner",
       "unit": "M6-47",
       "weight": 100
     },
     {
       "id": 240,
       "identifier": "M6-48",
-      "password": "VR-M6-48",
+      "password": "M6-48",
+      "residentAccessMode": "owner",
       "unit": "M6-48",
       "weight": 100
     },
     {
       "id": 241,
       "identifier": "M6-49",
-      "password": "VR-M6-49",
+      "password": "M6-49",
+      "residentAccessMode": "owner",
       "unit": "M6-49",
       "weight": 100
     },
     {
       "id": 242,
       "identifier": "M6-50",
-      "password": "VR-M6-50",
+      "password": "M6-50",
+      "residentAccessMode": "owner",
       "unit": "M6-50",
       "weight": 100
     },
     {
       "id": 243,
       "identifier": "M6-51",
-      "password": "VR-M6-51",
+      "password": "M6-51",
+      "residentAccessMode": "owner",
       "unit": "M6-51",
       "weight": 100
     },
     {
       "id": 244,
       "identifier": "M6-52",
-      "password": "VR-M6-52",
+      "password": "M6-52",
+      "residentAccessMode": "owner",
       "unit": "M6-52",
       "weight": 100
     },
     {
       "id": 245,
       "identifier": "M6-53",
-      "password": "VR-M6-53",
+      "password": "M6-53",
+      "residentAccessMode": "owner",
       "unit": "M6-53",
       "weight": 100
     },
     {
       "id": 246,
       "identifier": "M6-54",
-      "password": "VR-M6-54",
+      "password": "M6-54",
+      "residentAccessMode": "owner",
       "unit": "M6-54",
       "weight": 100
     },
     {
       "id": 247,
       "identifier": "M6-55",
-      "password": "VR-M6-55",
+      "password": "M6-55",
+      "residentAccessMode": "owner",
       "unit": "M6-55",
       "weight": 100
     },
     {
       "id": 248,
       "identifier": "M6-56",
-      "password": "VR-M6-56",
+      "password": "M6-56",
+      "residentAccessMode": "owner",
       "unit": "M6-56",
       "weight": 100
     },
     {
       "id": 249,
       "identifier": "M7-01",
-      "password": "VR-M7-01",
+      "password": "M7-01",
+      "residentAccessMode": "owner",
       "unit": "M7-01",
       "weight": 100
     },
     {
       "id": 250,
       "identifier": "M7-02",
-      "password": "VR-M7-02",
+      "password": "M7-02",
+      "residentAccessMode": "owner",
       "unit": "M7-02",
       "weight": 100
     },
     {
       "id": 251,
       "identifier": "M7-03",
-      "password": "VR-M7-03",
+      "password": "M7-03",
+      "residentAccessMode": "owner",
       "unit": "M7-03",
       "weight": 100
     },
     {
       "id": 252,
       "identifier": "M7-04",
-      "password": "VR-M7-04",
+      "password": "M7-04",
+      "residentAccessMode": "owner",
       "unit": "M7-04",
       "weight": 100
     },
     {
       "id": 253,
       "identifier": "M7-05",
-      "password": "VR-M7-05",
+      "password": "M7-05",
+      "residentAccessMode": "owner",
       "unit": "M7-05",
       "weight": 100
     },
     {
       "id": 254,
       "identifier": "M7-06",
-      "password": "VR-M7-06",
+      "password": "M7-06",
+      "residentAccessMode": "owner",
       "unit": "M7-06",
       "weight": 100
     },
     {
       "id": 255,
       "identifier": "M7-07",
-      "password": "VR-M7-07",
+      "password": "M7-07",
+      "residentAccessMode": "owner",
       "unit": "M7-07",
       "weight": 100
     },
     {
       "id": 256,
       "identifier": "M7-08",
-      "password": "VR-M7-08",
+      "password": "M7-08",
+      "residentAccessMode": "owner",
       "unit": "M7-08",
       "weight": 100
     },
     {
       "id": 257,
       "identifier": "M7-09",
-      "password": "VR-M7-09",
+      "password": "M7-09",
+      "residentAccessMode": "owner",
       "unit": "M7-09",
       "weight": 100
     },
     {
       "id": 258,
       "identifier": "M7-10",
-      "password": "VR-M7-10",
+      "password": "M7-10",
+      "residentAccessMode": "owner",
       "unit": "M7-10",
       "weight": 100
     },
     {
       "id": 259,
       "identifier": "M8-01",
-      "password": "VR-M8-01",
+      "password": "M8-01",
+      "residentAccessMode": "owner",
       "unit": "M8-01",
       "weight": 100
     },
     {
       "id": 260,
       "identifier": "M8-02",
-      "password": "VR-M8-02",
+      "password": "M8-02",
+      "residentAccessMode": "owner",
       "unit": "M8-02",
       "weight": 100
     },
     {
       "id": 261,
       "identifier": "M8-03",
-      "password": "VR-M8-03",
+      "password": "M8-03",
+      "residentAccessMode": "owner",
       "unit": "M8-03",
       "weight": 100
     },
     {
       "id": 262,
       "identifier": "M8-04",
-      "password": "VR-M8-04",
+      "password": "M8-04",
+      "residentAccessMode": "owner",
       "unit": "M8-04",
       "weight": 100
     },
     {
       "id": 263,
       "identifier": "M8-05",
-      "password": "VR-M8-05",
+      "password": "M8-05",
+      "residentAccessMode": "owner",
       "unit": "M8-05",
       "weight": 100
     },
     {
       "id": 264,
       "identifier": "M8-06",
-      "password": "VR-M8-06",
+      "password": "M8-06",
+      "residentAccessMode": "owner",
       "unit": "M8-06",
       "weight": 100
     },
     {
       "id": 265,
       "identifier": "M8-07",
-      "password": "VR-M8-07",
+      "password": "M8-07",
+      "residentAccessMode": "owner",
       "unit": "M8-07",
       "weight": 100
     },
     {
       "id": 266,
       "identifier": "M8-08",
-      "password": "VR-M8-08",
+      "password": "M8-08",
+      "residentAccessMode": "owner",
       "unit": "M8-08",
       "weight": 100
     },
     {
       "id": 267,
       "identifier": "M8-09",
-      "password": "VR-M8-09",
+      "password": "M8-09",
+      "residentAccessMode": "owner",
       "unit": "M8-09",
       "weight": 100
     },
     {
       "id": 268,
       "identifier": "M8-10",
-      "password": "VR-M8-10",
+      "password": "M8-10",
+      "residentAccessMode": "owner",
       "unit": "M8-10",
       "weight": 100
     },
     {
       "id": 269,
       "identifier": "M8-11",
-      "password": "VR-M8-11",
+      "password": "M8-11",
+      "residentAccessMode": "owner",
       "unit": "M8-11",
       "weight": 100
     },
     {
       "id": 270,
       "identifier": "M8-12",
-      "password": "VR-M8-12",
+      "password": "M8-12",
+      "residentAccessMode": "owner",
       "unit": "M8-12",
       "weight": 100
     },
     {
       "id": 271,
       "identifier": "M8-13",
-      "password": "VR-M8-13",
+      "password": "M8-13",
+      "residentAccessMode": "owner",
       "unit": "M8-13",
       "weight": 100
     },
     {
       "id": 272,
       "identifier": "M8-14",
-      "password": "VR-M8-14",
+      "password": "M8-14",
+      "residentAccessMode": "owner",
       "unit": "M8-14",
       "weight": 100
     },
     {
       "id": 273,
       "identifier": "M8-15",
-      "password": "VR-M8-15",
+      "password": "M8-15",
+      "residentAccessMode": "owner",
       "unit": "M8-15",
       "weight": 100
     },
     {
       "id": 274,
       "identifier": "M8-15A",
-      "password": "VR-M8-15A",
+      "password": "M8-15A",
+      "residentAccessMode": "owner",
       "unit": "M8-15A",
       "weight": 100
     },
     {
       "id": 275,
       "identifier": "M8-16",
-      "password": "VR-M8-16",
+      "password": "M8-16",
+      "residentAccessMode": "owner",
       "unit": "M8-16",
       "weight": 100
     },
     {
       "id": 276,
       "identifier": "M8-17",
-      "password": "VR-M8-17",
+      "password": "M8-17",
+      "residentAccessMode": "owner",
       "unit": "M8-17",
       "weight": 100
     },
     {
       "id": 277,
       "identifier": "M8-18",
-      "password": "VR-M8-18",
+      "password": "M8-18",
+      "residentAccessMode": "owner",
       "unit": "M8-18",
       "weight": 100
     },
     {
       "id": 278,
       "identifier": "M8-19",
-      "password": "VR-M8-19",
+      "password": "M8-19",
+      "residentAccessMode": "owner",
       "unit": "M8-19",
       "weight": 100
     },
     {
       "id": 279,
       "identifier": "M8-20",
-      "password": "VR-M8-20",
+      "password": "M8-20",
+      "residentAccessMode": "owner",
       "unit": "M8-20",
       "weight": 100
     },
     {
       "id": 280,
       "identifier": "M8-21",
-      "password": "VR-M8-21",
+      "password": "M8-21",
+      "residentAccessMode": "owner",
       "unit": "M8-21",
       "weight": 100
     },
     {
       "id": 281,
       "identifier": "M8-22",
-      "password": "VR-M8-22",
+      "password": "M8-22",
+      "residentAccessMode": "owner",
       "unit": "M8-22",
       "weight": 100
     },
     {
       "id": 282,
       "identifier": "M8-23",
-      "password": "VR-M8-23",
+      "password": "M8-23",
+      "residentAccessMode": "owner",
       "unit": "M8-23",
       "weight": 100
     },
     {
       "id": 283,
       "identifier": "M8-24",
-      "password": "VR-M8-24",
+      "password": "M8-24",
+      "residentAccessMode": "owner",
       "unit": "M8-24",
       "weight": 100
     },
     {
       "id": 284,
       "identifier": "M8-25",
-      "password": "VR-M8-25",
+      "password": "M8-25",
+      "residentAccessMode": "owner",
       "unit": "M8-25",
       "weight": 100
     },
     {
       "id": 285,
       "identifier": "M8-26",
-      "password": "VR-M8-26",
+      "password": "M8-26",
+      "residentAccessMode": "owner",
       "unit": "M8-26",
       "weight": 100
     },
     {
       "id": 286,
       "identifier": "M8-27",
-      "password": "VR-M8-27",
+      "password": "M8-27",
+      "residentAccessMode": "owner",
       "unit": "M8-27",
       "weight": 100
     },
     {
       "id": 287,
       "identifier": "M9-01",
-      "password": "VR-M9-01",
+      "password": "M9-01",
+      "residentAccessMode": "owner",
       "unit": "M9-01",
       "weight": 100
     },
     {
       "id": 288,
       "identifier": "M9-02",
-      "password": "VR-M9-02",
+      "password": "M9-02",
+      "residentAccessMode": "owner",
       "unit": "M9-02",
       "weight": 100
     },
     {
       "id": 289,
       "identifier": "M9-03",
-      "password": "VR-M9-03",
+      "password": "M9-03",
+      "residentAccessMode": "owner",
       "unit": "M9-03",
       "weight": 100
     },
     {
       "id": 290,
       "identifier": "M9-04",
-      "password": "VR-M9-04",
+      "password": "M9-04",
+      "residentAccessMode": "owner",
       "unit": "M9-04",
       "weight": 100
     },
     {
       "id": 291,
       "identifier": "M9-05",
-      "password": "VR-M9-05",
+      "password": "M9-05",
+      "residentAccessMode": "owner",
       "unit": "M9-05",
       "weight": 100
     },
     {
       "id": 292,
       "identifier": "M9-06",
-      "password": "VR-M9-06",
+      "password": "M9-06",
+      "residentAccessMode": "owner",
       "unit": "M9-06",
       "weight": 100
     },
     {
       "id": 293,
       "identifier": "M9-07",
-      "password": "VR-M9-07",
+      "password": "M9-07",
+      "residentAccessMode": "owner",
       "unit": "M9-07",
       "weight": 100
     },
     {
       "id": 294,
       "identifier": "M9-08",
-      "password": "VR-M9-08",
+      "password": "M9-08",
+      "residentAccessMode": "owner",
       "unit": "M9-08",
       "weight": 100
     },
     {
       "id": 295,
       "identifier": "M9-09",
-      "password": "VR-M9-09",
+      "password": "M9-09",
+      "residentAccessMode": "owner",
       "unit": "M9-09",
       "weight": 100
     },
     {
       "id": 296,
       "identifier": "M9-10",
-      "password": "VR-M9-10",
+      "password": "M9-10",
+      "residentAccessMode": "owner",
       "unit": "M9-10",
       "weight": 100
     },
     {
       "id": 297,
       "identifier": "M9-11",
-      "password": "VR-M9-11",
+      "password": "M9-11",
+      "residentAccessMode": "owner",
       "unit": "M9-11",
       "weight": 100
     },
     {
       "id": 298,
       "identifier": "M9-12",
-      "password": "VR-M9-12",
+      "password": "M9-12",
+      "residentAccessMode": "owner",
       "unit": "M9-12",
       "weight": 100
     },
     {
       "id": 299,
       "identifier": "M9-13",
-      "password": "VR-M9-13",
+      "password": "M9-13",
+      "residentAccessMode": "owner",
       "unit": "M9-13",
       "weight": 100
     },
     {
       "id": 300,
       "identifier": "M9-14",
-      "password": "VR-M9-14",
+      "password": "M9-14",
+      "residentAccessMode": "owner",
       "unit": "M9-14",
       "weight": 100
     },
@@ -2084,6 +2308,7 @@
       "id": 302,
       "identifier": "SIM-01",
       "password": "Simulacion-2026!",
+      "residentAccessMode": null,
       "unit": "SIM-01",
       "weight": 120
     },
@@ -2091,6 +2316,7 @@
       "id": 303,
       "identifier": "SIM-02",
       "password": "Simulacion-2026!",
+      "residentAccessMode": null,
       "unit": "SIM-02",
       "weight": 95
     },
@@ -2098,6 +2324,7 @@
       "id": 304,
       "identifier": "SIM-03",
       "password": "Simulacion-2026!",
+      "residentAccessMode": null,
       "unit": "SIM-03",
       "weight": 105
     },
@@ -2105,7 +2332,32 @@
       "id": 305,
       "identifier": "SIM-04",
       "password": "Simulacion-2026!",
+      "residentAccessMode": null,
       "unit": "SIM-04",
+      "weight": 100
+    },
+    {
+      "id": 306,
+      "identifier": "SIM-05",
+      "password": "Simulacion-2026!",
+      "residentAccessMode": null,
+      "unit": "SIM-05",
+      "weight": 110
+    },
+    {
+      "id": 307,
+      "identifier": "SIM-06",
+      "password": "Simulacion-2026!",
+      "residentAccessMode": null,
+      "unit": "SIM-06",
+      "weight": 90
+    },
+    {
+      "id": 309,
+      "identifier": "CASA",
+      "password": "CASA",
+      "residentAccessMode": "owner",
+      "unit": "CASA",
       "weight": 100
     }
   ]

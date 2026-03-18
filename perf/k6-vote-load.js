@@ -54,18 +54,30 @@ const safeJson = (response) => {
 export default function () {
   const user = fixture.users[exec.vu.idInTest - 1];
   const startedAt = Date.now();
-
-  const loginResponse = http.post(
-    `${fixture.baseUrl}/api/auth/local`,
-    JSON.stringify({
-      identifier: user.identifier,
-      password: user.password,
-    }),
-    {
-      headers: jsonHeaders,
-      tags: { endpoint: "auth_local" },
-    },
-  );
+  const isResidentFlow = Boolean(user.residentAccessMode);
+  const loginResponse = isResidentFlow
+    ? http.post(
+        `${fixture.baseUrl}/api/account/resident-login`,
+        JSON.stringify({
+          residentAccessMode: user.residentAccessMode,
+          unit: user.unit || user.identifier,
+        }),
+        {
+          headers: jsonHeaders,
+          tags: { endpoint: "resident_login" },
+        },
+      )
+    : http.post(
+        `${fixture.baseUrl}/api/auth/local`,
+        JSON.stringify({
+          identifier: user.identifier,
+          password: user.password,
+        }),
+        {
+          headers: jsonHeaders,
+          tags: { endpoint: "auth_local" },
+        },
+      );
   const loginBody = safeJson(loginResponse);
 
   const loginOk = check(loginResponse, {

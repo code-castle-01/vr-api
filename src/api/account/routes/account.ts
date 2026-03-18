@@ -1,6 +1,15 @@
 export default {
   routes: [
     {
+      method: 'POST',
+      path: '/account/resident-login',
+      handler: 'account.residentLogin',
+      config: {
+        auth: false,
+        policies: [],
+      },
+    },
+    {
       method: 'GET',
       path: '/account/me',
       handler: 'account.me',

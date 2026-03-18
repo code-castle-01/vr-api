@@ -16,6 +16,18 @@
       "type": "datetime",
       "required": false
     },
+    "access_mode": {
+      "type": "enumeration",
+      "enum": [
+        "owner",
+        "proxy"
+      ],
+      "required": false
+    },
+    "representation_locked": {
+      "type": "boolean",
+      "default": false
+    },
     "assembly": {
       "type": "relation",
       "relation": "manyToOne",

@@ -471,6 +471,7 @@ export interface ApiAttendanceAttendance extends Schema.CollectionType {
     draftAndPublish: false;
   };
   attributes: {
+    access_mode: Attribute.Enumeration<['owner', 'proxy']>;
     assembly: Attribute.Relation<
       'api::attendance.attendance',
       'manyToOne',
@@ -489,6 +490,7 @@ export interface ApiAttendanceAttendance extends Schema.CollectionType {
       'manyToOne',
       'plugin::users-permissions.user'
     >;
+    representation_locked: Attribute.Boolean & Attribute.DefaultTo<false>;
     updatedAt: Attribute.DateTime;
     updatedBy: Attribute.Relation<
       'api::attendance.attendance',
@@ -1127,7 +1129,7 @@ export interface PluginUsersPermissionsUser extends Schema.CollectionType {
   };
   attributes: {
     blocked: Attribute.Boolean & Attribute.DefaultTo<false>;
-    Coeficiente: Attribute.Decimal & Attribute.DefaultTo<100>;
+    Coeficiente: Attribute.Decimal & Attribute.DefaultTo<0.003367>;
     confirmationToken: Attribute.String & Attribute.Private;
     confirmed: Attribute.Boolean & Attribute.DefaultTo<false>;
     createdAt: Attribute.DateTime;
@@ -1147,7 +1149,7 @@ export interface PluginUsersPermissionsUser extends Schema.CollectionType {
     password: Attribute.Password &
       Attribute.Private &
       Attribute.SetMinMaxLength<{
-        minLength: 6;
+        minLength: 5;
       }>;
     provider: Attribute.String;
     resetPasswordToken: Attribute.String & Attribute.Private;

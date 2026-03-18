@@ -3,6 +3,7 @@ require("dotenv").config();
 const fs = require("fs");
 const path = require("path");
 const mysql = require("mysql2/promise");
+const residentRoster = require("../shared/resident-roster");
 
 const DEFAULT_BASE_URL = "http://localhost:1337";
 const DEFAULT_LIMIT = 300;
@@ -15,7 +16,9 @@ const resolveNumber = (value, fallback) => {
 };
 
 const buildPassword = (username) =>
-  username.startsWith("SIM-") ? DEMO_PASSWORD : `VR-${username.toUpperCase()}`;
+  username.startsWith("SIM-")
+    ? DEMO_PASSWORD
+    : residentRoster.buildResidentPassword(username);
 
 const outputPath = path.join(__dirname, "vote-load-fixture.json");
 
@@ -118,6 +121,7 @@ async function main() {
         id: Number(user.id),
         identifier: user.username,
         password: buildPassword(user.username),
+        residentAccessMode: user.username.startsWith("SIM-") ? null : "owner",
         unit: user.unidad_privada,
         weight: Number(user.coeficiente),
       })),

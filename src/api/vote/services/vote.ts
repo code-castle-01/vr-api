@@ -1,11 +1,19 @@
 import { factories } from '@strapi/strapi';
 import { errors } from '@strapi/utils';
+import {
+  type ResidentAccessMode,
+  findCurrentAssembly as findCurrentAssemblyHelper,
+  getResidentRepresentationState,
+  lockResidentRepresentation,
+  normalizeResidentName,
+} from '../../../utils/resident-session';
 
 const { ApplicationError, ForbiddenError, NotFoundError, ValidationError } = errors;
 
 type VoteMechanism = 'electronic' | 'in_person' | 'proxy' | 'correspondence';
 
 type CastVoteInput = {
+  accessMode: ResidentAccessMode;
   agendaItemId: number;
   mechanism: VoteMechanism;
   userId: number;
@@ -271,39 +279,9 @@ export default factories.createCoreService('api::vote.vote', ({ strapi }) => {
     });
   };
 
-  const findCurrentAssembly = async (): Promise<AssemblyEntity | null> => {
-    const inProgressAssemblies = (await strapi.entityService.findMany('api::assembly.assembly', {
-      fields: ['id', 'title', 'date', 'status'],
-      filters: {
-        status: 'in_progress',
-      },
-      sort: {
-        date: 'asc',
-      },
-      limit: 1,
-    })) as AssemblyEntity[];
-
-    if (inProgressAssemblies[0]) {
-      return inProgressAssemblies[0];
-    }
-
-    const scheduledAssemblies = (await strapi.entityService.findMany('api::assembly.assembly', {
-      fields: ['id', 'title', 'date', 'status'],
-      filters: {
-        status: 'scheduled',
-      },
-      sort: {
-        date: 'asc',
-      },
-      limit: 1,
-    })) as AssemblyEntity[];
-
-    return scheduledAssemblies[0] ?? null;
-  };
-
   return {
-    async getBallot(userId: number) {
-      const currentAssembly = await findCurrentAssembly();
+    async getBallot(userId: number, accessMode: ResidentAccessMode) {
+      const currentAssembly = await findCurrentAssemblyHelper(strapi);
       const user = (await strapi.entityService.findOne('plugin::users-permissions.user', userId, {
         fields: ['id', 'NombreCompleto', 'UnidadPrivada', 'Coeficiente', 'EstadoCartera'],
       })) as UserEntity | null;
@@ -312,34 +290,13 @@ export default factories.createCoreService('api::vote.vote', ({ strapi }) => {
         throw new NotFoundError('No se encontro el copropietario autenticado.');
       }
 
-      const proxyDeclarations =
-        currentAssembly
-          ? ((await strapi.db
-              .query('api::proxy-authorization.proxy-authorization')
-              .findMany({
-                where: {
-                  assembly: currentAssembly.id,
-                  submitted_by: userId,
-                },
-                populate: {
-                  represented_user: true,
-                },
-              })) as ProxyAuthorizationEntity[])
-          : [];
-
-      const delegatedBy =
-        currentAssembly
-          ? ((await strapi.db
-              .query('api::proxy-authorization.proxy-authorization')
-              .findOne({
-                where: {
-                  assembly: currentAssembly.id,
-                  represented_user: userId,
-                },
-                populate: {
-                  submitted_by: true,
-                },
-              })) as ProxyAuthorizationEntity | null)
+      const representationState =
+        currentAssembly?.id
+          ? await getResidentRepresentationState(strapi, {
+              accessMode,
+              assemblyId: currentAssembly.id,
+              user,
+            })
           : null;
 
       const agendaItems = currentAssembly
@@ -423,21 +380,8 @@ export default factories.createCoreService('api::vote.vote', ({ strapi }) => {
         });
       }
 
-      const representedResidents = proxyDeclarations
-        .map((item) => ({
-          coefficient: Number(item.represented_user?.Coeficiente ?? 0),
-          id: item.represented_user?.id ?? 0,
-          name: item.represented_user?.NombreCompleto ?? item.represented_user?.UnidadPrivada ?? 'Residente',
-          unit: item.represented_user?.UnidadPrivada ?? null,
-        }))
-        .filter((item) => item.id > 0)
-        .sort((left, right) => (left.unit ?? '').localeCompare(right.unit ?? ''));
-
-      const totalWeightRepresented =
-        Number(user.Coeficiente ?? 0) +
-        representedResidents.reduce((sum, resident) => sum + resident.coefficient, 0);
-
       return {
+        accessMode,
         assembly: currentAssembly
           ? {
               date: currentAssembly.date ?? null,
@@ -446,22 +390,20 @@ export default factories.createCoreService('api::vote.vote', ({ strapi }) => {
               title: currentAssembly.title ?? null,
             }
           : null,
-        delegatedBy: delegatedBy?.submitted_by
-          ? {
-              id: delegatedBy.submitted_by.id,
-              name:
-                delegatedBy.submitted_by.NombreCompleto ??
-                delegatedBy.submitted_by.UnidadPrivada ??
-                `Usuario ${delegatedBy.submitted_by.id}`,
-              unit: delegatedBy.submitted_by.UnidadPrivada ?? null,
-            }
-          : null,
+        canCastVotes: representationState?.canProceedToSurveys ?? accessMode === 'owner',
+        delegatedBy: representationState?.delegatedBy ?? null,
+        proxySelfAuthorized: Boolean(representationState?.proxySelfDeclaration),
         resident: {
           id: user.id,
-          name: user.NombreCompleto ?? user.UnidadPrivada ?? `Usuario ${user.id}`,
+          name: normalizeResidentName(user),
           unit: user.UnidadPrivada ?? null,
         },
-        representedResidents,
+        representedResidents:
+          representationState?.externalResidents.map((resident) => ({
+            id: resident.id,
+            name: resident.name,
+            unit: resident.unit,
+          })) ?? [],
         surveys: agendaItems.map((agendaItem) => {
           const existingVote = votesByAgendaItem.get(agendaItem.id);
 
@@ -491,13 +433,16 @@ export default factories.createCoreService('api::vote.vote', ({ strapi }) => {
             title: agendaItem.title ?? `Encuesta ${agendaItem.id}`,
           };
         }),
-        totalHomesRepresented: 1 + representedResidents.length,
-        totalWeightRepresented,
+        totalHomesRepresented:
+          representationState?.totalHomesRepresented ?? (accessMode === 'owner' ? 1 : 0),
+        totalWeightRepresented:
+          representationState?.totalWeightRepresented ??
+          (accessMode === 'owner' ? Number(user.Coeficiente ?? 0) : 0),
       };
     },
 
     async getResultsOverview() {
-      const currentAssembly = await findCurrentAssembly();
+      const currentAssembly = await findCurrentAssemblyHelper(strapi);
 
       if (!currentAssembly) {
         return {
@@ -838,25 +783,12 @@ export default factories.createCoreService('api::vote.vote', ({ strapi }) => {
       const submissionLockName = `vote:${agendaItem.id}:${input.userId}`;
 
       return withVoteSubmissionLock(submissionLockName, async () => {
-        const [delegatedBy, proxyDeclarations, existingVote] = await Promise.all([
-          strapi.db.query('api::proxy-authorization.proxy-authorization').findOne({
-            where: {
-              assembly: agendaItem.assembly.id,
-              represented_user: input.userId,
-            },
-            populate: {
-              submitted_by: true,
-            },
-          }) as Promise<ProxyAuthorizationEntity | null>,
-          strapi.db.query('api::proxy-authorization.proxy-authorization').findMany({
-            where: {
-              assembly: agendaItem.assembly.id,
-              submitted_by: input.userId,
-            },
-            populate: {
-              represented_user: true,
-            },
-          }) as Promise<ProxyAuthorizationEntity[]>,
+        const [representationState, existingVote] = await Promise.all([
+          getResidentRepresentationState(strapi, {
+            accessMode: input.accessMode,
+            assemblyId: agendaItem.assembly.id,
+            user,
+          }),
           strapi.db.query('api::vote.vote').findOne({
             where: {
               agenda_item: input.agendaItemId,
@@ -865,13 +797,17 @@ export default factories.createCoreService('api::vote.vote', ({ strapi }) => {
           }) as Promise<{ id: number } | null>,
         ]);
 
-        if (delegatedBy?.submitted_by) {
+        if (representationState.delegatedBy) {
           throw new ForbiddenError(
             `Tu unidad ya fue representada mediante poder por ${
-              delegatedBy.submitted_by.NombreCompleto ??
-              delegatedBy.submitted_by.UnidadPrivada ??
-              `Usuario ${delegatedBy.submitted_by.id}`
+              representationState.delegatedBy.name
             }.`
+          );
+        }
+
+        if (!representationState.canProceedToSurveys) {
+          throw new ForbiddenError(
+            'Debes adjuntar primero el poder de la unidad con la que ingresaste como apoderado.'
           );
         }
 
@@ -879,12 +815,7 @@ export default factories.createCoreService('api::vote.vote', ({ strapi }) => {
           throw new ApplicationError('El copropietario ya emitio su voto para este punto.');
         }
 
-        const weight =
-          Number(user.Coeficiente ?? 0) +
-          proxyDeclarations.reduce(
-            (sum, item) => sum + Number(item.represented_user?.Coeficiente ?? 0),
-            0
-          );
+        const weight = representationState.totalWeightRepresented;
 
         if (!Number.isFinite(weight) || weight <= 0) {
           throw new ValidationError(
@@ -892,7 +823,8 @@ export default factories.createCoreService('api::vote.vote', ({ strapi }) => {
           );
         }
 
-        const mechanism = proxyDeclarations.length > 0 ? 'proxy' : input.mechanism;
+        const mechanism =
+          representationState.totalDeclarationsCount > 0 ? 'proxy' : input.mechanism;
         const votes = await Promise.all(
           orderedVoteOptions.map((voteOption) =>
             strapi.entityService.create('api::vote.vote', {
@@ -912,6 +844,12 @@ export default factories.createCoreService('api::vote.vote', ({ strapi }) => {
           )
         );
 
+        await lockResidentRepresentation(strapi, {
+          accessMode: input.accessMode,
+          assemblyId: agendaItem.assembly.id,
+          userId: input.userId,
+        });
+
         return {
           agendaItem: {
             id: agendaItem.id,
@@ -927,10 +865,10 @@ export default factories.createCoreService('api::vote.vote', ({ strapi }) => {
           },
           voter: {
             id: user.id,
-            name: user.NombreCompleto ?? user.UnidadPrivada ?? `Usuario ${user.id}`,
+            name: normalizeResidentName(user),
             unit: user.UnidadPrivada ?? null,
           },
-          totalHomesRepresented: 1 + proxyDeclarations.length,
+          totalHomesRepresented: representationState.totalHomesRepresented,
         };
       });
     },

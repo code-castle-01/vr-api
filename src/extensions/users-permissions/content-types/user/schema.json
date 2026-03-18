@@ -31,7 +31,7 @@
     },
     "password": {
       "type": "password",
-      "minLength": 6,
+      "minLength": 5,
       "configurable": false,
       "private": true,
       "searchable": false
@@ -73,7 +73,7 @@
     },
     "Coeficiente": {
       "type": "decimal",
-      "default": 100
+      "default": 0.003367
     },
     "EstadoCartera": {
       "type": "boolean",

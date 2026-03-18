@@ -1,41 +1,28 @@
 require('dotenv').config();
 
-const path = require('path');
-const xlsx = require('xlsx');
 const Strapi = require('@strapi/strapi');
+const bcrypt = require('bcryptjs');
+const residentRoster = require('./shared/resident-roster');
 
-const DEFAULT_COEFFICIENT = 100;
-const DEFAULT_EMAIL_DOMAIN = 'vegasdelrio.com';
-const FIRST_DATA_ROW = 3;
+const DEFAULT_COEFFICIENT = Number(residentRoster.DEFAULT_COEFFICIENT);
+const buildUserEmail = (unit) => residentRoster.buildResidentEmail(unit);
+const buildDefaultPassword = (unit) => residentRoster.buildResidentPassword(unit);
+const readOwners = (xlsPath) => residentRoster.readRosterOwners(xlsPath);
+const PASSWORD_HASH_ROUNDS = 10;
+const normalizeResidentCoefficient = (value) => {
+  const parsed = Number(value);
 
-const buildUserEmail = (unit) => `${unit.toLowerCase()}@${DEFAULT_EMAIL_DOMAIN}`;
+  if (!Number.isFinite(parsed) || parsed <= 0 || parsed === 100) {
+    return DEFAULT_COEFFICIENT;
+  }
 
-const buildDefaultPassword = (unit) => `VR-${unit.toUpperCase()}`;
-
-const readOwners = (xlsPath) => {
-  const workbook = xlsx.readFile(xlsPath);
-  const sheet = workbook.Sheets[workbook.SheetNames[0]];
-  const rows = xlsx.utils.sheet_to_json(sheet, { header: 1 });
-
-  return rows
-    .slice(FIRST_DATA_ROW)
-    .map((row) => {
-      const unit = row?.[0]?.toString().trim().toUpperCase();
-      const fullName = row?.[1]?.toString().trim();
-
-      if (!unit || !fullName) {
-        return null;
-      }
-
-      return { unit, fullName };
-    })
-    .filter(Boolean);
+  return parsed;
 };
 
 async function importUsers() {
   const appContext = await Strapi.compile();
   const app = await Strapi(appContext).load();
-  const xlsPath = path.join(__dirname, 'doc', 'LISTA ASISTENCIA REUNION ASAMBLEA 2026.xls');
+  const xlsPath = residentRoster.resolveRosterPath(__dirname);
 
   console.log('--- SINCRONIZANDO COPROPIETARIOS DESDE EXCEL ---');
 
@@ -66,14 +53,14 @@ async function importUsers() {
       role: authenticatedRoleId,
       NombreCompleto: owner.fullName,
       UnidadPrivada: owner.unit,
-      Coeficiente: Number(existingUser?.Coeficiente ?? DEFAULT_COEFFICIENT),
+      Coeficiente: normalizeResidentCoefficient(existingUser?.Coeficiente),
       EstadoCartera: Boolean(existingUser?.EstadoCartera ?? false),
     };
 
     if (!existingUser) {
       await app.plugin('users-permissions').service('user').add({
         ...payload,
-        password: buildDefaultPassword(owner.unit),
+        password: await bcrypt.hash(buildDefaultPassword(owner.unit), PASSWORD_HASH_ROUNDS),
       });
       created += 1;
       console.log(`Creado: ${owner.unit} -> ${owner.fullName}`);
@@ -82,7 +69,7 @@ async function importUsers() {
 
     await app.plugin('users-permissions').service('user').edit(existingUser.id, {
       ...payload,
-      ...(!existingUser.password ? { password: buildDefaultPassword(owner.unit) } : {}),
+      password: await bcrypt.hash(buildDefaultPassword(owner.unit), PASSWORD_HASH_ROUNDS),
     });
     updated += 1;
   }
