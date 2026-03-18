@@ -644,7 +644,14 @@ export interface ApiProxyAuthorizationProxyAuthorization
       'manyToOne',
       'plugin::users-permissions.user'
     >;
-    status: Attribute.Enumeration<['submitted']> &
+    revoked_at: Attribute.DateTime;
+    revoked_by: Attribute.Relation<
+      'api::proxy-authorization.proxy-authorization',
+      'manyToOne',
+      'plugin::users-permissions.user'
+    >;
+    revoked_reason: Attribute.Text;
+    status: Attribute.Enumeration<['submitted', 'revoked']> &
       Attribute.Required &
       Attribute.DefaultTo<'submitted'>;
     submitted_by: Attribute.Relation<

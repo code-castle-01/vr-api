@@ -133,6 +133,7 @@ const ADMIN_ACTIONS = [
   'api::meeting-document.meeting-document.adminUpdate',
   'api::meeting-document.meeting-document.adminDelete',
   'api::proxy-authorization.proxy-authorization.adminByAssembly',
+  'api::proxy-authorization.proxy-authorization.adminRevoke',
 ];
 
 type AssemblyRow = {

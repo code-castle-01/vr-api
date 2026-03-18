@@ -21,6 +21,11 @@ type ProxyAuthorizationService = {
     userId: number,
     accessMode: 'owner' | 'proxy'
   ) => Promise<unknown>;
+  revokeDeclaration: (
+    adminUserId: number,
+    declarationId: number,
+    reason: unknown
+  ) => Promise<unknown>;
 };
 
 export default factories.createCoreController(
@@ -144,6 +149,29 @@ export default factories.createCoreController(
       ctx.body = await proxyAuthorizationService.listByAssembly(
         Number(userId),
         assemblyId
+      );
+    },
+
+    async adminRevoke(ctx: Context) {
+      const userId = ctx.state.user?.id;
+      const declarationId = Number(ctx.params.id);
+
+      if (!userId) {
+        return ctx.unauthorized('Debes iniciar sesion para revocar poderes.');
+      }
+
+      if (!Number.isInteger(declarationId) || declarationId <= 0) {
+        return ctx.badRequest('Debes indicar un poder valido.');
+      }
+
+      const proxyAuthorizationService = strapi.service(
+        'api::proxy-authorization.proxy-authorization'
+      ) as unknown as ProxyAuthorizationService;
+
+      ctx.body = await proxyAuthorizationService.revokeDeclaration(
+        Number(userId),
+        declarationId,
+        ctx.request.body?.reason
       );
     },
   })

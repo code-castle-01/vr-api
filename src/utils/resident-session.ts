@@ -39,12 +39,17 @@ export type ResidentSupportDocumentEntity = {
   url?: string | null;
 };
 
+export type ResidentProxyAuthorizationStatus = 'submitted' | 'revoked';
+
 export type ResidentProxyAuthorizationEntity = {
   assembly?: ResidentAssemblyEntity | null;
   createdAt?: string | null;
   id: number;
   represented_user?: ResidentUserEntity | null;
-  status?: 'submitted' | null;
+  revoked_at?: string | null;
+  revoked_by?: ResidentUserEntity | null;
+  revoked_reason?: string | null;
+  status?: ResidentProxyAuthorizationStatus | null;
   submitted_by?: ResidentUserEntity | null;
   support_document?: ResidentSupportDocumentEntity | null;
 };
@@ -86,6 +91,8 @@ type StrapiLike = {
 
 export const DEFAULT_COEFFICIENT = Number(residentRoster.DEFAULT_COEFFICIENT);
 export const QUORUM_MIN_HOMES = Number(residentRoster.QUORUM_MIN_HOMES);
+export const ACTIVE_PROXY_AUTHORIZATION_STATUS: ResidentProxyAuthorizationStatus = 'submitted';
+export const REVOKED_PROXY_AUTHORIZATION_STATUS: ResidentProxyAuthorizationStatus = 'revoked';
 
 export const normalizeResidentUnit = (value: unknown) =>
   residentRoster.normalizeUnit(typeof value === 'string' ? value : '');
@@ -340,6 +347,40 @@ export const getResidentAssemblyParticipationState = async (
   };
 };
 
+export const getResidentAccessModeForAssembly = async (
+  strapi: StrapiLike,
+  input: {
+    assemblyId: number;
+    userId: number;
+  }
+): Promise<ResidentAccessMode> => {
+  const database = getDatabase(strapi);
+  const attendance = (await database.query('api::attendance.attendance').findOne({
+    where: {
+      assembly: input.assemblyId,
+      user: input.userId,
+    },
+  })) as AttendanceEntity | null;
+  const attendanceMode = normalizeResidentAccessMode(attendance?.access_mode);
+
+  if (attendanceMode) {
+    return attendanceMode;
+  }
+
+  const selfDeclaration = (await database
+    .query('api::proxy-authorization.proxy-authorization')
+    .findOne({
+      where: {
+        assembly: input.assemblyId,
+        represented_user: input.userId,
+        status: ACTIVE_PROXY_AUTHORIZATION_STATUS,
+        submitted_by: input.userId,
+      },
+    })) as { id: number } | null;
+
+  return selfDeclaration?.id ? 'proxy' : 'owner';
+};
+
 export const getResidentRepresentationState = async (
   strapi: StrapiLike,
   input: {
@@ -370,6 +411,7 @@ export const getResidentRepresentationState = async (
       },
       where: {
         assembly: input.assemblyId,
+        status: ACTIVE_PROXY_AUTHORIZATION_STATUS,
         submitted_by: input.user.id,
       },
     })) as ResidentProxyAuthorizationEntity[];
@@ -387,6 +429,7 @@ export const getResidentRepresentationState = async (
       where: {
         assembly: input.assemblyId,
         represented_user: input.user.id,
+        status: ACTIVE_PROXY_AUTHORIZATION_STATUS,
       },
     })) as ResidentProxyAuthorizationEntity[];
 
@@ -425,16 +468,12 @@ export const getResidentRepresentationState = async (
   const totalHomesRepresented =
     input.accessMode === 'owner'
       ? 1 + externalResidents.length
-      : proxySelfEnabled
-        ? 1 + externalResidents.length
-        : 0;
+      : (proxySelfEnabled ? 1 : 0) + externalResidents.length;
 
   const totalWeightRepresented =
     input.accessMode === 'owner'
       ? ownWeight + externalWeight
-      : proxySelfEnabled
-        ? ownWeight + externalWeight
-        : 0;
+      : (proxySelfEnabled ? ownWeight : 0) + externalWeight;
 
   return {
     accessMode: input.accessMode,

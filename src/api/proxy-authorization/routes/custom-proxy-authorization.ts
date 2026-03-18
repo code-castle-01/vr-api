@@ -48,5 +48,13 @@ export default {
         policies: [],
       },
     },
+    {
+      method: 'POST',
+      path: '/proxy-authorizations/admin/:id/revoke',
+      handler: 'proxy-authorization.adminRevoke',
+      config: {
+        policies: [],
+      },
+    },
   ],
 };

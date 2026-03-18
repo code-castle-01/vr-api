@@ -527,6 +527,10 @@ export default factories.createCoreService('api::vote.vote', ({ strapi }) => {
             : row.user?.id;
         const weight = parseNumericValue(row.weight);
 
+        if (weight <= 0) {
+          continue;
+        }
+
         if (typeof userId === 'number' && Number.isInteger(userId) && userId > 0) {
           distinctVoters.add(userId);
         }

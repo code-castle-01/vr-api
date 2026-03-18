@@ -34,10 +34,24 @@
     "status": {
       "type": "enumeration",
       "enum": [
-        "submitted"
+        "submitted",
+        "revoked"
       ],
       "default": "submitted",
       "required": true
+    },
+    "revoked_reason": {
+      "type": "text",
+      "required": false
+    },
+    "revoked_at": {
+      "type": "datetime",
+      "required": false
+    },
+    "revoked_by": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "plugin::users-permissions.user"
     },
     "assembly": {
       "type": "relation",
