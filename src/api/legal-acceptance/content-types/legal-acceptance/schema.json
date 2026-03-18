@@ -1,0 +1,52 @@
+{
+  "kind": "collectionType",
+  "collectionName": "legal_acceptances",
+  "info": {
+    "singularName": "legal-acceptance",
+    "pluralName": "legal-acceptances",
+    "displayName": "Legal Acceptance",
+    "description": "Constancia de aceptacion legal del portal residente"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "document_key": {
+      "type": "string",
+      "required": true
+    },
+    "document_version": {
+      "type": "string",
+      "required": true
+    },
+    "document_hash": {
+      "type": "string",
+      "required": true
+    },
+    "accepted_at": {
+      "type": "datetime",
+      "required": true
+    },
+    "ip_address": {
+      "type": "string"
+    },
+    "user_agent": {
+      "type": "text"
+    },
+    "context": {
+      "type": "enumeration",
+      "enum": [
+        "resident_login"
+      ],
+      "default": "resident_login",
+      "required": true
+    },
+    "user": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "plugin::users-permissions.user",
+      "required": true
+    }
+  }
+}

@@ -577,6 +577,51 @@ export interface ApiCategoryCategory extends Schema.CollectionType {
   };
 }
 
+export interface ApiLegalAcceptanceLegalAcceptance
+  extends Schema.CollectionType {
+  collectionName: 'legal_acceptances';
+  info: {
+    description: 'Constancia de aceptacion legal del portal residente';
+    displayName: 'Legal Acceptance';
+    pluralName: 'legal-acceptances';
+    singularName: 'legal-acceptance';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    accepted_at: Attribute.DateTime & Attribute.Required;
+    context: Attribute.Enumeration<['resident_login']> &
+      Attribute.Required &
+      Attribute.DefaultTo<'resident_login'>;
+    createdAt: Attribute.DateTime;
+    createdBy: Attribute.Relation<
+      'api::legal-acceptance.legal-acceptance',
+      'oneToOne',
+      'admin::user'
+    > &
+      Attribute.Private;
+    document_hash: Attribute.String & Attribute.Required;
+    document_key: Attribute.String & Attribute.Required;
+    document_version: Attribute.String & Attribute.Required;
+    ip_address: Attribute.String;
+    updatedAt: Attribute.DateTime;
+    updatedBy: Attribute.Relation<
+      'api::legal-acceptance.legal-acceptance',
+      'oneToOne',
+      'admin::user'
+    > &
+      Attribute.Private;
+    user: Attribute.Relation<
+      'api::legal-acceptance.legal-acceptance',
+      'manyToOne',
+      'plugin::users-permissions.user'
+    > &
+      Attribute.Required;
+    user_agent: Attribute.Text;
+  };
+}
+
 export interface ApiMeetingDocumentMeetingDocument
   extends Schema.CollectionType {
   collectionName: 'meeting_documents';
@@ -1197,6 +1242,7 @@ declare module '@strapi/types' {
       'api::attendance.attendance': ApiAttendanceAttendance;
       'api::blog-post.blog-post': ApiBlogPostBlogPost;
       'api::category.category': ApiCategoryCategory;
+      'api::legal-acceptance.legal-acceptance': ApiLegalAcceptanceLegalAcceptance;
       'api::meeting-document.meeting-document': ApiMeetingDocumentMeetingDocument;
       'api::proxy-authorization.proxy-authorization': ApiProxyAuthorizationProxyAuthorization;
       'api::vote-option.vote-option': ApiVoteOptionVoteOption;
