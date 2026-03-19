@@ -82,12 +82,15 @@ type AttendanceRow = {
 type LegalAcceptanceRow = {
   accepted_at?: string | null;
   document_hash?: string | null;
+  document_key?: string | null;
   document_version?: string | null;
   id: number;
   ip_address?: string | null;
   user?: UserEntity | null;
   user_agent?: string | null;
 };
+
+type PdfTableColumnStyles = Record<number, Record<string, unknown>>;
 
 type NominalVote = {
   mechanism: string;
@@ -136,6 +139,8 @@ const ACCESS_MODE_LABELS: Record<string, string> = {
   proxy: 'Apoderado',
 };
 
+const REPORT_TIMEZONE = 'America/Bogota';
+
 const formatDateTime = (value?: string | null) => {
   if (!value) {
     return 'Sin fecha';
@@ -147,7 +152,11 @@ const formatDateTime = (value?: string | null) => {
     return 'Sin fecha';
   }
 
-  return parsedDate.toLocaleString('es-CO');
+  return new Intl.DateTimeFormat('es-CO', {
+    dateStyle: 'short',
+    timeStyle: 'medium',
+    timeZone: REPORT_TIMEZONE,
+  }).format(parsedDate);
 };
 
 const formatWeight = (value: number) => parseNumericValue(value).toFixed(6);
@@ -411,15 +420,23 @@ const buildPdf = (
     cursorY += 64;
   };
 
-  const drawTable = (head: string[], body: string[][]) => {
+  const drawTable = (
+    head: string[],
+    body: string[][],
+    options?: {
+      columnStyles?: PdfTableColumnStyles;
+      fontSize?: number;
+    }
+  ) => {
     autoTable(pdf, {
       body,
       head: [head],
       margin: { left: marginLeft, right: marginRight },
       startY: cursorY,
+      tableWidth: contentWidth,
       styles: {
         cellPadding: 4,
-        fontSize: 8,
+        fontSize: options?.fontSize ?? 8,
         lineColor: [224, 213, 199],
         lineWidth: 0.4,
         overflow: 'linebreak',
@@ -432,6 +449,7 @@ const buildPdf = (
       alternateRowStyles: {
         fillColor: [252, 250, 246],
       },
+      columnStyles: options?.columnStyles,
       theme: 'grid',
     });
 
@@ -447,7 +465,15 @@ const buildPdf = (
   drawSection('Resultados agregados por encuesta');
   drawTable(
     ['Encuesta ID', 'Titulo', 'Estado', 'Opcion', 'Registros', 'Peso opcion', 'Regla', 'Resultado'],
-    aggregatedRows.length ? aggregatedRows : [['-', 'Sin resultados', '-', '-', '-', '-', '-', '-']]
+    aggregatedRows.length ? aggregatedRows : [['-', 'Sin resultados', '-', '-', '-', '-', '-', '-']],
+    {
+      columnStyles: {
+        1: { cellWidth: 228 },
+        3: { cellWidth: 120 },
+        6: { cellWidth: 86 },
+        7: { cellWidth: 92 },
+      },
+    }
   );
 
   for (const survey of surveyReports) {
@@ -469,7 +495,18 @@ const buildPdf = (
             formatWeight(nominalVote.weight),
             toPdfText(formatDateTime(nominalVote.recordedAt)),
           ])
-        : [['-', '-', 'Sin votos registrados', '-', '-', '-', '-']]
+        : [['-', '-', 'Sin votos registrados', '-', '-', '-', '-']],
+      {
+        columnStyles: {
+          0: { cellWidth: 50 },
+          1: { cellWidth: 56 },
+          2: { cellWidth: 148 },
+          3: { cellWidth: 176 },
+          4: { cellWidth: 76 },
+          5: { cellWidth: 58 },
+          6: { cellWidth: 96 },
+        },
+      }
     );
   }
 
@@ -489,7 +526,22 @@ const buildPdf = (
     ],
     activePowerRows.length
       ? activePowerRows
-      : [['-', '-', 'Sin poderes activos', '-', '-', '-', '-', '-', '-', '-']]
+      : [['-', '-', 'Sin poderes activos', '-', '-', '-', '-', '-', '-', '-']],
+    {
+      columnStyles: {
+        0: { cellWidth: 32 },
+        1: { cellWidth: 44 },
+        2: { cellWidth: 92 },
+        3: { cellWidth: 48 },
+        4: { cellWidth: 92 },
+        5: { cellWidth: 82 },
+        6: { cellWidth: 82 },
+        7: { cellWidth: 58 },
+        8: { cellWidth: 44 },
+        9: { cellWidth: 166 },
+      },
+      fontSize: 7.6,
+    }
   );
 
   drawSection('Poderes revocados');
@@ -509,13 +561,41 @@ const buildPdf = (
     ],
     revokedPowerRows.length
       ? revokedPowerRows
-      : [['-', '-', 'Sin poderes revocados', '-', '-', '-', '-', '-', '-', '-', '-']]
+      : [['-', '-', 'Sin poderes revocados', '-', '-', '-', '-', '-', '-', '-', '-']],
+    {
+      columnStyles: {
+        0: { cellWidth: 30 },
+        1: { cellWidth: 40 },
+        2: { cellWidth: 80 },
+        3: { cellWidth: 46 },
+        4: { cellWidth: 80 },
+        5: { cellWidth: 74 },
+        6: { cellWidth: 76 },
+        7: { cellWidth: 76 },
+        8: { cellWidth: 52 },
+        9: { cellWidth: 40 },
+        10: { cellWidth: 126 },
+      },
+      fontSize: 7.4,
+    }
   );
 
   drawSection('Asistencia');
   drawTable(
     ['ID', 'Unidad', 'Residente', 'Modalidad', 'Check-in', 'Bloqueada', 'Voto', 'Proxy'],
-    attendanceRows.length ? attendanceRows : [['-', '-', 'Sin asistencias', '-', '-', '-', '-', '-']]
+    attendanceRows.length ? attendanceRows : [['-', '-', 'Sin asistencias', '-', '-', '-', '-', '-']],
+    {
+      columnStyles: {
+        0: { cellWidth: 30 },
+        1: { cellWidth: 46 },
+        2: { cellWidth: 140 },
+        3: { cellWidth: 62 },
+        4: { cellWidth: 98 },
+        5: { cellWidth: 52 },
+        6: { cellWidth: 40 },
+        7: { cellWidth: 160 },
+      },
+    }
   );
 
   drawSection('Quorum');
@@ -524,7 +604,20 @@ const buildPdf = (
   drawSection('Cumplimiento legal - detalle tecnico');
   drawTable(
     ['ID', 'Unidad', 'Residente', 'Aceptado', 'Version', 'Hash', 'IP', 'User-Agent'],
-    legalRows.length ? legalRows : [['-', '-', 'Sin registros legales', '-', '-', '-', '-', '-']]
+    legalRows.length ? legalRows : [['-', '-', 'Sin registros legales', '-', '-', '-', '-', '-']],
+    {
+      columnStyles: {
+        0: { cellWidth: 30 },
+        1: { cellWidth: 50 },
+        2: { cellWidth: 128 },
+        3: { cellWidth: 98 },
+        4: { cellWidth: 62 },
+        5: { cellWidth: 156 },
+        6: { cellWidth: 72 },
+        7: { cellWidth: 178 },
+      },
+      fontSize: 7.4,
+    }
   );
 
   const pages = pdf.getNumberOfPages();
@@ -630,7 +723,6 @@ export default factories.createCoreService('api::assembly.assembly', ({ strapi }
       strapi.db.query('api::legal-acceptance.legal-acceptance').findMany({
         where: {
           context: 'resident_login',
-          document_key: RESIDENT_ACCESS_LEGAL_KEY,
         },
         orderBy: [{ accepted_at: 'desc' }, { id: 'desc' }],
         populate: {
@@ -723,6 +815,50 @@ export default factories.createCoreService('api::assembly.assembly', ({ strapi }
         ),
       ]);
 
+    const legalUsersById = new Map<number, UserEntity>();
+
+    for (const attendance of attendances) {
+      const attendanceUser = attendance.user;
+
+      if (!attendanceUser || isAdminRole(attendanceUser.role)) {
+        continue;
+      }
+
+      legalUsersById.set(attendanceUser.id, attendanceUser);
+    }
+
+    for (const legal of legalAcceptances) {
+      const legalUser = legal.user;
+
+      if (!legalUser || isAdminRole(legalUser.role)) {
+        continue;
+      }
+
+      if (!legalUsersById.has(legalUser.id)) {
+        legalUsersById.set(legalUser.id, legalUser);
+      }
+    }
+
+    const legalByUserId = new Map<number, LegalAcceptanceRow>();
+    const legalRowsWithCurrentKey = legalAcceptances.filter(
+      (legal) => legal.document_key === RESIDENT_ACCESS_LEGAL_KEY
+    );
+    const legalRowsWithLegacyKey = legalAcceptances.filter(
+      (legal) => legal.document_key !== RESIDENT_ACCESS_LEGAL_KEY
+    );
+
+    for (const legalCollection of [legalRowsWithCurrentKey, legalRowsWithLegacyKey]) {
+      for (const legal of legalCollection) {
+        const legalUser = legal.user;
+
+        if (!legalUser || isAdminRole(legalUser.role) || legalByUserId.has(legalUser.id)) {
+          continue;
+        }
+
+        legalByUserId.set(legalUser.id, legal);
+      }
+    }
+
     const quorumRows = [
       ['Casas habilitadas', String(quorum.enabledHomesCount)],
       ['Usuarios con ingreso', String(quorum.loggedUsersCount)],
@@ -731,18 +867,32 @@ export default factories.createCoreService('api::assembly.assembly', ({ strapi }
       ['Total base de casas', String(quorum.totalHomesBase)],
     ].map((row) => row.map((value) => toPdfText(value)));
 
-    const legalRows = legalAcceptances
-      .filter((legal) => legal.user && !isAdminRole(legal.user.role))
-      .map((legal) => [
-        String(legal.id),
-        toPdfText(normalizeResidentUnit(legal.user?.UnidadPrivada ?? legal.user?.username ?? '')),
-        toPdfText(normalizeResidentName(legal.user)),
-        toPdfText(formatDateTime(legal.accepted_at)),
-        toPdfText(legal.document_version ?? 'Sin version'),
-        toPdfText(legal.document_hash ?? 'Sin hash'),
-        toPdfText(legal.ip_address ?? 'Sin IP'),
-        toPdfText(legal.user_agent ?? 'Sin User-Agent'),
-      ]);
+    const legalRows = Array.from(legalUsersById.values())
+      .sort((left, right) => {
+        const leftUnit = normalizeResidentUnit(left.UnidadPrivada ?? left.username ?? '');
+        const rightUnit = normalizeResidentUnit(right.UnidadPrivada ?? right.username ?? '');
+
+        if (leftUnit !== rightUnit) {
+          return leftUnit.localeCompare(rightUnit, 'es');
+        }
+
+        return normalizeResidentName(left).localeCompare(normalizeResidentName(right), 'es');
+      })
+      .map((user) => {
+        const legal = legalByUserId.get(user.id);
+
+        return [
+          String(legal?.id ?? '-'),
+          toPdfText(normalizeResidentUnit(user.UnidadPrivada ?? user.username ?? '')),
+          toPdfText(normalizeResidentName(user)),
+          toPdfText(legal ? formatDateTime(legal.accepted_at) : 'Sin aceptacion'),
+          toPdfText(legal?.document_version ?? 'Sin version'),
+          toPdfText(legal?.document_hash ?? 'Sin hash'),
+          toPdfText(legal?.ip_address ?? 'Sin IP'),
+          toPdfText(legal?.user_agent ?? 'Sin User-Agent'),
+        ];
+      });
+    const legalAcceptedCount = legalRows.filter((row) => row[0] !== '-').length;
 
     const summaryRows = [
       ['Asamblea', assembly.title ?? `Asamblea ${assembly.id}`],
@@ -755,7 +905,8 @@ export default factories.createCoreService('api::assembly.assembly', ({ strapi }
       ['Poderes activos', String(activePowers.length)],
       ['Poderes revocados', String(revokedPowers.length)],
       ['Asistencias', String(attendanceRows.length)],
-      ['Registros legales', String(legalRows.length)],
+      ['Registros legales', String(legalAcceptedCount)],
+      ['Usuarios auditados legal', String(legalRows.length)],
       ['Quorum', quorum.quorumReached ? 'Alcanzado' : 'Pendiente'],
     ].map((row) => row.map((value) => toPdfText(value)));
 
