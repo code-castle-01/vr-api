@@ -228,6 +228,26 @@ const repairPersistedVoteWeights = async (strapi: StrapiApp) => {
   strapi.log.info('Pesos de voto verificados sin cambios pendientes.');
 };
 
+const runDeferredStartupTask = (
+  strapi: StrapiApp,
+  label: string,
+  task: () => Promise<void>
+) => {
+  setTimeout(() => {
+    void (async () => {
+      strapi.log.info(`Iniciando tarea posarranque: ${label}.`);
+
+      try {
+        await task();
+        strapi.log.info(`Tarea posarranque completada: ${label}.`);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : 'Error desconocido';
+        strapi.log.error(`Fallo la tarea posarranque ${label}: ${message}`);
+      }
+    })();
+  }, 0);
+};
+
 const resolveRoleId = (value: unknown): number | null => {
   if (typeof value === 'number' && Number.isInteger(value) && value > 0) {
     return value;
@@ -636,23 +656,18 @@ export default {
       strapi.log.error(`Fallo la asociacion de poderes historicos: ${message}`);
     }
 
-    if (!fs.existsSync(xlsPath)) {
-      strapi.log.warn('No se encontro el padron Excel de la asamblea.');
-    } else {
-      try {
-        const owners = readAssemblyOwners(xlsPath);
-        await syncAssemblyOwners(strapi, owners);
-      } catch (error) {
-        const message = error instanceof Error ? error.message : 'Error desconocido';
-        strapi.log.error(`Fallo la sincronizacion del padron de copropietarios: ${message}`);
+    runDeferredStartupTask(strapi, 'sincronizacion del padron', async () => {
+      if (!fs.existsSync(xlsPath)) {
+        strapi.log.warn('No se encontro el padron Excel de la asamblea.');
+        return;
       }
-    }
 
-    try {
+      const owners = readAssemblyOwners(xlsPath);
+      await syncAssemblyOwners(strapi, owners);
+    });
+
+    runDeferredStartupTask(strapi, 'reparacion automatica de pesos de voto', async () => {
       await repairPersistedVoteWeights(strapi);
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Error desconocido';
-      strapi.log.error(`Fallo la reparacion automatica de pesos de voto: ${message}`);
-    }
+    });
   },
 };
