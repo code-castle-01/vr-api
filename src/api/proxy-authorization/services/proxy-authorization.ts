@@ -21,6 +21,7 @@ import {
   serializeAssemblySummary,
   serializeSupportDocument,
 } from '../../../utils/resident-session';
+import { syncResidentVoteWeights } from '../../../utils/vote-weight';
 
 const { ApplicationError, ForbiddenError, NotFoundError, ValidationError } = errors;
 
@@ -237,43 +238,6 @@ export default factories.createCoreService(
             status: REVOKED_PROXY_AUTHORIZATION_STATUS,
           },
         })) as ResidentProxyAuthorizationEntity[];
-
-    const syncResidentVoteWeights = async (assemblyId: number, userId: number) => {
-      const user = await findCurrentResident(userId);
-      const accessMode = await getResidentAccessModeForAssembly(strapi, {
-        assemblyId,
-        userId,
-      });
-      const representationState = await getResidentRepresentationState(strapi, {
-        accessMode,
-        assemblyId,
-        user,
-      });
-      const votes = (await strapi.db.query('api::vote.vote').findMany({
-        where: {
-          agenda_item: {
-            assembly: assemblyId,
-          },
-          user: userId,
-        },
-      })) as Array<{ id: number }>;
-
-      if (!votes.length) {
-        return;
-      }
-
-      const nextWeight = Math.max(0, representationState.totalWeightRepresented);
-
-      await Promise.all(
-        votes.map((vote) =>
-          strapi.entityService.update('api::vote.vote', vote.id, {
-            data: {
-              weight: nextWeight,
-            },
-          })
-        )
-      );
-    };
 
     const getOutgoingRevokedPool = (declarations: ResidentProxyAuthorizationEntity[]) =>
       new Set(
@@ -764,7 +728,10 @@ export default factories.createCoreService(
           })
         );
 
-        await syncResidentVoteWeights(currentAssembly.id, userId);
+        await syncResidentVoteWeights(strapi as any, {
+          assemblyId: currentAssembly.id,
+          userId,
+        });
 
         return await this.getSummary(userId, accessMode);
       },
@@ -941,7 +908,10 @@ export default factories.createCoreService(
         );
 
         if (declaration.submitted_by?.id) {
-          await syncResidentVoteWeights(assembly.id, declaration.submitted_by.id);
+          await syncResidentVoteWeights(strapi as any, {
+            assemblyId: assembly.id,
+            userId: declaration.submitted_by.id,
+          });
         }
 
         return {

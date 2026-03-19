@@ -24,5 +24,13 @@ export default {
         policies: [],
       },
     },
+    {
+      method: 'POST',
+      path: '/votes/admin/recalculate-weights',
+      handler: 'vote.adminRepairWeights',
+      config: {
+        policies: [],
+      },
+    },
   ],
 };

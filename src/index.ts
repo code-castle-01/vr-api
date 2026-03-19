@@ -50,6 +50,7 @@ type StrapiApp = {
 };
 
 const residentRoster = require(path.resolve(process.cwd(), 'shared', 'resident-roster'));
+const { repairStoredVoteWeights } = require('./utils/vote-weight');
 
 type AssemblyOwnerRow = {
   fullName: string;
@@ -135,6 +136,7 @@ const ADMIN_ACTIONS = [
   'api::meeting-document.meeting-document.adminDelete',
   'api::proxy-authorization.proxy-authorization.adminByAssembly',
   'api::proxy-authorization.proxy-authorization.adminRevoke',
+  'api::vote.vote.adminRepairWeights',
 ];
 
 type AssemblyRow = {
@@ -186,6 +188,44 @@ const ensureResidentCoefficientPrecision = async (strapi: StrapiApp) => {
   );
 
   strapi.log.info('Precision de coeficiente ajustada a DECIMAL(12,6).');
+};
+
+const ensureVoteWeightPrecision = async (strapi: StrapiApp) => {
+  const dbConnection = (strapi as any).db?.connection;
+  const client = dbConnection?.client?.config?.client;
+
+  if (client !== 'mysql' && client !== 'mysql2') {
+    return;
+  }
+
+  if (typeof dbConnection?.raw !== 'function') {
+    strapi.log.warn('No fue posible verificar la precision de weight en la base de datos.');
+    return;
+  }
+
+  const rawColumns = await dbConnection.raw("SHOW COLUMNS FROM votes LIKE 'weight'");
+  const [column] = normalizeRawRows(rawColumns);
+  const currentType = String(column?.Type ?? '').toLowerCase();
+
+  if (currentType === 'decimal(12,6)') {
+    return;
+  }
+
+  await dbConnection.raw('ALTER TABLE votes MODIFY weight DECIMAL(12,6) NOT NULL');
+  strapi.log.info('Precision de weight ajustada a DECIMAL(12,6).');
+};
+
+const repairPersistedVoteWeights = async (strapi: StrapiApp) => {
+  const summary = await repairStoredVoteWeights(strapi);
+
+  if (summary.updatedVotes > 0) {
+    strapi.log.info(
+      `Pesos de voto recalculados. Asambleas: ${summary.assemblies.length}. Usuarios ajustados: ${summary.updatedUsers}. Votos ajustados: ${summary.updatedVotes}.`
+    );
+    return;
+  }
+
+  strapi.log.info('Pesos de voto verificados sin cambios pendientes.');
 };
 
 const resolveRoleId = (value: unknown): number | null => {
@@ -583,6 +623,13 @@ export default {
     }
 
     try {
+      await ensureVoteWeightPrecision(strapi);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Error desconocido';
+      strapi.log.error(`Fallo el ajuste de precision para weight: ${message}`);
+    }
+
+    try {
       await attachOrphanProxyAuthorizations(strapi);
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Error desconocido';
@@ -591,15 +638,21 @@ export default {
 
     if (!fs.existsSync(xlsPath)) {
       strapi.log.warn('No se encontro el padron Excel de la asamblea.');
-      return;
+    } else {
+      try {
+        const owners = readAssemblyOwners(xlsPath);
+        await syncAssemblyOwners(strapi, owners);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : 'Error desconocido';
+        strapi.log.error(`Fallo la sincronizacion del padron de copropietarios: ${message}`);
+      }
     }
 
     try {
-      const owners = readAssemblyOwners(xlsPath);
-      await syncAssemblyOwners(strapi, owners);
+      await repairPersistedVoteWeights(strapi);
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Error desconocido';
-      strapi.log.error(`Fallo la sincronizacion del padron de copropietarios: ${message}`);
+      strapi.log.error(`Fallo la reparacion automatica de pesos de voto: ${message}`);
     }
   },
 };
