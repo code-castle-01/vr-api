@@ -25,6 +25,14 @@ export default {
       },
     },
     {
+      method: 'GET',
+      path: '/votes/resident-history',
+      handler: 'vote.residentHistory',
+      config: {
+        policies: [],
+      },
+    },
+    {
       method: 'POST',
       path: '/votes/admin/recalculate-weights',
       handler: 'vote.adminRepairWeights',

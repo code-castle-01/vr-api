@@ -18,6 +18,7 @@ type CastVoteBody = {
 
 type VoteService = {
   getBallot: (userId: number, accessMode: 'owner' | 'proxy') => Promise<unknown>;
+  getResidentHistory: (userId: number) => Promise<unknown>;
   getResultsOverview: () => Promise<unknown>;
   castVote: (input: {
     accessMode: 'owner' | 'proxy';
@@ -116,6 +117,17 @@ export default factories.createCoreController('api::vote.vote', ({ strapi }) => 
 
     const voteService = strapi.service('api::vote.vote') as unknown as VoteService;
     ctx.body = await voteService.getResultsOverview();
+  },
+
+  async residentHistory(ctx: Context) {
+    const userId = ctx.state.user?.id;
+
+    if (!userId) {
+      return ctx.unauthorized('Debes iniciar sesion para consultar tu historial.');
+    }
+
+    const voteService = strapi.service('api::vote.vote') as unknown as VoteService;
+    ctx.body = await voteService.getResidentHistory(Number(userId));
   },
 
   async adminRepairWeights(ctx: Context) {

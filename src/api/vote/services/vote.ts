@@ -3,9 +3,13 @@ import { errors } from '@strapi/utils';
 import {
   type ResidentAccessMode,
   findCurrentAssembly as findCurrentAssemblyHelper,
+  getResidentAccessModeForAssembly,
+  getResidentAssemblyParticipationState,
   getResidentRepresentationState,
   lockResidentRepresentation,
   normalizeResidentName,
+  normalizeResidentUnit,
+  serializeSupportDocument,
 } from '../../../utils/resident-session';
 
 const { ApplicationError, ForbiddenError, NotFoundError, ValidationError } = errors;
@@ -49,11 +53,33 @@ type UserEntity = {
   EstadoCartera?: boolean | null;
   NombreCompleto?: string | null;
   UnidadPrivada?: string | null;
+  blocked?: boolean | null;
+  email?: string | null;
   id: number;
+  role?: {
+    id?: number;
+    name?: string | null;
+    type?: string | null;
+  } | null;
+  username?: string | null;
 };
 
 type ProxyAuthorizationEntity = {
+  assembly?: AssemblyEntity | null;
+  createdAt?: string | null;
+  id: number;
   represented_user?: UserEntity | null;
+  revoked_at?: string | null;
+  revoked_by?: UserEntity | null;
+  revoked_reason?: string | null;
+  status?: 'submitted' | 'revoked' | null;
+  support_document?: {
+    id: number;
+    mime?: string | null;
+    name?: string | null;
+    size?: number | null;
+    url?: string | null;
+  } | null;
   submitted_by?: UserEntity | null;
 };
 
@@ -87,9 +113,32 @@ type ResultStatus =
 
 type FlatVoteRow = {
   agenda_item?: { id: number } | number | null;
+  createdAt?: string | null;
+  id?: number;
+  mechanism?: VoteMechanism | null;
   user?: { id: number } | number | null;
-  vote_option?: { id: number } | number | null;
+  vote_option?: { id: number; text?: string | null } | number | null;
   weight?: number | string | null;
+};
+
+type ResidentHistoryAttendanceRow = {
+  access_mode?: string | null;
+  assembly?: AssemblyEntity | null;
+  checkInTime?: string | null;
+  id: number;
+  representation_locked?: boolean | null;
+  user?: UserEntity | null;
+};
+
+type LegalAcceptanceEntity = {
+  accepted_at?: string | null;
+  context?: string | null;
+  document_hash?: string | null;
+  document_key?: string | null;
+  document_version?: string | null;
+  id: number;
+  ip_address?: string | null;
+  user_agent?: string | null;
 };
 
 type SurveyRecord = Record<string, unknown>;
@@ -101,6 +150,12 @@ const parseNumericValue = (value: number | string | null | undefined) => {
 };
 
 const OFFICIAL_VOTE_QUESTION = 'official_vote';
+const VOTE_MECHANISM_LABELS: Record<VoteMechanism, string> = {
+  correspondence: 'Correspondencia',
+  electronic: 'Electronico',
+  in_person: 'Presencial',
+  proxy: 'Poder',
+};
 
 const isObjectRecord = (value: unknown): value is SurveyRecord =>
   typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -160,6 +215,10 @@ const getResidentAgendaStatus = (
 
   if (assemblyStatus === 'in_progress') {
     return 'open' as const;
+  }
+
+  if (assemblyStatus === 'finished') {
+    return 'closed' as const;
   }
 
   return 'pending' as const;
@@ -241,6 +300,38 @@ const getOfficialVoteSummary = (
   };
 };
 
+const resolvePublicUrl = () => {
+  const rawValue = process.env.PUBLIC_URL?.trim();
+
+  if (!rawValue) {
+    return '';
+  }
+
+  try {
+    return new URL(rawValue).toString().replace(/\/$/, '');
+  } catch {
+    return '';
+  }
+};
+
+const buildAbsoluteUrl = (url?: string | null) => {
+  if (!url) {
+    return null;
+  }
+
+  if (/^https?:\/\//i.test(url)) {
+    return url;
+  }
+
+  const publicUrl = resolvePublicUrl();
+
+  if (!publicUrl) {
+    return url;
+  }
+
+  return `${publicUrl}${url.startsWith('/') ? '' : '/'}${url}`;
+};
+
 export default factories.createCoreService('api::vote.vote', ({ strapi }) => {
   const isMysqlClient = () => {
     const client = strapi.config.get<string>('database.connection.client', '');
@@ -279,9 +370,244 @@ export default factories.createCoreService('api::vote.vote', ({ strapi }) => {
     });
   };
 
+  const findLatestFinishedAssemblyForResident = async (userId: number) => {
+    const finishedAssemblies = (await strapi.entityService.findMany('api::assembly.assembly', {
+      fields: ['id', 'title', 'date', 'status'],
+      filters: {
+        status: 'finished',
+      },
+      sort: {
+        date: 'desc',
+      },
+      limit: 20,
+    })) as AssemblyEntity[];
+
+    if (!finishedAssemblies.length) {
+      return null;
+    }
+
+    const finishedAssemblyIds = finishedAssemblies.map((assembly) => assembly.id);
+    const [attendanceRows, voteRows, declarationRows] = await Promise.all([
+      strapi.db.query('api::attendance.attendance').findMany({
+        where: {
+          assembly: {
+            id: {
+              $in: finishedAssemblyIds,
+            },
+          },
+          user: userId,
+        },
+        populate: {
+          assembly: {
+            fields: ['id'],
+          },
+        },
+      }) as Promise<Array<{ assembly?: { id: number } | number | null }>>,
+      strapi.db.query('api::vote.vote').findMany({
+        where: {
+          user: userId,
+          agenda_item: {
+            assembly: {
+              id: {
+                $in: finishedAssemblyIds,
+              },
+            },
+          },
+        },
+        populate: {
+          agenda_item: {
+            populate: {
+              assembly: {
+                fields: ['id'],
+              },
+            },
+          },
+        },
+      }) as Promise<Array<{ agenda_item?: { assembly?: { id: number } | null } | null }>>,
+      strapi.db.query('api::proxy-authorization.proxy-authorization').findMany({
+        where: {
+          assembly: {
+            id: {
+              $in: finishedAssemblyIds,
+            },
+          },
+          $or: [{ submitted_by: userId }, { represented_user: userId }],
+        },
+        populate: {
+          assembly: {
+            fields: ['id'],
+          },
+        },
+      }) as Promise<Array<{ assembly?: { id: number } | number | null }>>,
+    ]);
+
+    const participatedAssemblyIds = new Set<number>();
+
+    for (const attendance of attendanceRows) {
+      const assemblyId =
+        typeof attendance.assembly === 'number'
+          ? attendance.assembly
+          : attendance.assembly?.id;
+
+      if (typeof assemblyId === 'number') {
+        participatedAssemblyIds.add(assemblyId);
+      }
+    }
+
+    for (const vote of voteRows) {
+      const assemblyId = vote.agenda_item?.assembly?.id;
+
+      if (typeof assemblyId === 'number') {
+        participatedAssemblyIds.add(assemblyId);
+      }
+    }
+
+    for (const declaration of declarationRows) {
+      const assemblyId =
+        typeof declaration.assembly === 'number'
+          ? declaration.assembly
+          : declaration.assembly?.id;
+
+      if (typeof assemblyId === 'number') {
+        participatedAssemblyIds.add(assemblyId);
+      }
+    }
+
+    return (
+      finishedAssemblies.find((assembly) => participatedAssemblyIds.has(assembly.id)) ?? null
+    );
+  };
+
+  const findAssemblyForResidentBallot = async (userId: number) => {
+    const currentAssembly = await findCurrentAssemblyHelper(strapi);
+
+    if (currentAssembly) {
+      return currentAssembly;
+    }
+
+    return findLatestFinishedAssemblyForResident(userId);
+  };
+
+  const buildSurveysForAssembly = (
+    assembly: AssemblyEntity,
+    agendaItems: AgendaItemListEntity[],
+    voteTotalsByOptionId: Map<number, { totalVotes: number; totalWeight: number }>,
+    participationByAgendaItem: Map<
+      number,
+      { totalVotes: number; totalWeight: number; voterIds: Set<number> }
+    >
+  ) => {
+    return agendaItems.map((agendaItem) => {
+      const voteSummary = getOfficialVoteSummary(
+        agendaItem.survey_schema,
+        agendaItem.title ?? `Encuesta ${agendaItem.id}`,
+        agendaItem.description ?? null
+      );
+      const normalizedStatus = getResidentAgendaStatus(
+        agendaItem.status,
+        assembly.status ?? agendaItem.assembly?.status
+      );
+      const participation = participationByAgendaItem.get(agendaItem.id);
+      const options = (agendaItem.vote_options ?? [])
+        .map((option) => {
+          const totals = voteTotalsByOptionId.get(option.id);
+
+          return {
+            id: option.id,
+            text: option.text ?? `Opcion ${option.id}`,
+            totalVotes: totals?.totalVotes ?? 0,
+            totalWeight: totals?.totalWeight ?? 0,
+          };
+        })
+        .sort((left, right) => {
+          if (right.totalWeight !== left.totalWeight) {
+            return right.totalWeight - left.totalWeight;
+          }
+
+          if (right.totalVotes !== left.totalVotes) {
+            return right.totalVotes - left.totalVotes;
+          }
+
+          return left.text.localeCompare(right.text);
+        });
+
+      const totalVotes = participation?.totalVotes ?? 0;
+      const totalWeight = participation?.totalWeight ?? 0;
+      const leadingOption = options[0] ?? null;
+      const secondOption = options[1] ?? null;
+      const hasTie =
+        Boolean(leadingOption) &&
+        Boolean(secondOption) &&
+        leadingOption.totalWeight === secondOption.totalWeight &&
+        leadingOption.totalVotes === secondOption.totalVotes;
+      const winningShareByWeight =
+        leadingOption && totalWeight > 0
+          ? (leadingOption.totalWeight / totalWeight) * 100
+          : 0;
+      const meetsRequiredThreshold =
+        !agendaItem.requiresSpecialMajority || winningShareByWeight >= 70;
+
+      let resultStatus: ResultStatus = 'no_votes';
+
+      if (totalVotes > 0 && hasTie) {
+        resultStatus = 'tie';
+      } else if (totalVotes > 0 && normalizedStatus === 'closed') {
+        resultStatus = meetsRequiredThreshold ? 'closed' : 'closed_without_threshold';
+      } else if (totalVotes > 0) {
+        resultStatus = meetsRequiredThreshold ? 'leading' : 'leading_without_threshold';
+      }
+
+      const normalizedOptions = options.map((option) => {
+        const shareByVotes = totalVotes > 0 ? (option.totalVotes / totalVotes) * 100 : 0;
+        const shareByWeight = totalWeight > 0 ? (option.totalWeight / totalWeight) * 100 : 0;
+        const isWinner =
+          Boolean(leadingOption) &&
+          !hasTie &&
+          option.id === leadingOption.id &&
+          option.totalVotes > 0;
+
+        return {
+          ...option,
+          isWinner,
+          shareByVotes,
+          shareByWeight,
+        };
+      });
+
+      const winningOption =
+        normalizedOptions.find((option) => option.isWinner) ?? null;
+
+      return {
+        id: agendaItem.id,
+        options: normalizedOptions,
+        requiresSpecialMajority: Boolean(agendaItem.requiresSpecialMajority),
+        resultStatus,
+        questionDescription: voteSummary.questionDescription,
+        questionTitle: voteSummary.questionTitle,
+        sectionTitle: voteSummary.sectionTitle,
+        status: normalizedStatus,
+        summary: {
+          totalOptions: normalizedOptions.length,
+          totalVotes,
+          totalWeight,
+          winningOptionId: winningOption?.id ?? null,
+        },
+        surveyTitle: agendaItem.title ?? `Encuesta ${agendaItem.id}`,
+        winningOption,
+      };
+    });
+  };
+
   return {
     async getBallot(userId: number, accessMode: ResidentAccessMode) {
-      const currentAssembly = await findCurrentAssemblyHelper(strapi);
+      const targetAssembly = await findAssemblyForResidentBallot(userId);
+      const effectiveAccessMode =
+        targetAssembly?.status === 'finished'
+          ? await getResidentAccessModeForAssembly(strapi, {
+              assemblyId: targetAssembly.id,
+              userId,
+            })
+          : accessMode;
       const user = (await strapi.entityService.findOne('plugin::users-permissions.user', userId, {
         fields: ['id', 'NombreCompleto', 'UnidadPrivada', 'Coeficiente', 'EstadoCartera'],
       })) as UserEntity | null;
@@ -291,25 +617,25 @@ export default factories.createCoreService('api::vote.vote', ({ strapi }) => {
       }
 
       const representationState =
-        currentAssembly?.id
+        targetAssembly?.id
           ? await getResidentRepresentationState(strapi, {
-              accessMode,
-              assemblyId: currentAssembly.id,
+              accessMode: effectiveAccessMode,
+              assemblyId: targetAssembly.id,
               user,
             })
           : null;
 
-      const agendaItems = currentAssembly
+      const agendaItems = targetAssembly
         ? ((await strapi.entityService.findMany('api::agenda-item.agenda-item', {
             fields: ['id', 'title', 'description', 'status', 'requiresSpecialMajority', 'survey_locale', 'survey_schema'],
             filters: {
               assembly: {
-                id: currentAssembly.id,
+                id: targetAssembly.id,
               },
             },
             populate: {
               assembly: {
-                fields: ['id', 'title', 'date'],
+                fields: ['id', 'title', 'date', 'status'],
               },
               vote_options: {
                 fields: ['id', 'text'],
@@ -324,6 +650,13 @@ export default factories.createCoreService('api::vote.vote', ({ strapi }) => {
       const votes = (await strapi.db.query('api::vote.vote').findMany({
         where: {
           user: userId,
+          ...(targetAssembly?.id
+            ? {
+                agenda_item: {
+                  assembly: targetAssembly.id,
+                },
+              }
+            : {}),
         },
         populate: {
           agenda_item: true,
@@ -381,16 +714,17 @@ export default factories.createCoreService('api::vote.vote', ({ strapi }) => {
       }
 
       return {
-        accessMode,
-        assembly: currentAssembly
+        accessMode: effectiveAccessMode,
+        assembly: targetAssembly
           ? {
-              date: currentAssembly.date ?? null,
-              id: currentAssembly.id,
-              status: currentAssembly.status ?? null,
-              title: currentAssembly.title ?? null,
+              date: targetAssembly.date ?? null,
+              id: targetAssembly.id,
+              status: targetAssembly.status ?? null,
+              title: targetAssembly.title ?? null,
             }
           : null,
-        canCastVotes: representationState?.canProceedToSurveys ?? accessMode === 'owner',
+        canCastVotes:
+          representationState?.canProceedToSurveys ?? effectiveAccessMode === 'owner',
         delegatedBy: representationState?.delegatedBy ?? null,
         proxySelfAuthorized: Boolean(representationState?.proxySelfDeclaration),
         resident: {
@@ -428,23 +762,34 @@ export default factories.createCoreService('api::vote.vote', ({ strapi }) => {
             surveySchema: agendaItem.survey_schema ?? null,
             status: getResidentAgendaStatus(
               agendaItem.status,
-              currentAssembly?.status ?? agendaItem.assembly?.status
+              targetAssembly?.status ?? agendaItem.assembly?.status
             ),
             title: agendaItem.title ?? `Encuesta ${agendaItem.id}`,
           };
         }),
         totalHomesRepresented:
-          representationState?.totalHomesRepresented ?? (accessMode === 'owner' ? 1 : 0),
+          representationState?.totalHomesRepresented ??
+          (effectiveAccessMode === 'owner' ? 1 : 0),
         totalWeightRepresented:
           representationState?.totalWeightRepresented ??
-          (accessMode === 'owner' ? Number(user.Coeficiente ?? 0) : 0),
+          (effectiveAccessMode === 'owner' ? Number(user.Coeficiente ?? 0) : 0),
       };
     },
 
     async getResultsOverview() {
-      const currentAssembly = await findCurrentAssemblyHelper(strapi);
+      const assemblies = (await strapi.entityService.findMany('api::assembly.assembly', {
+        fields: ['id', 'title', 'date', 'status'],
+        filters: {
+          status: {
+            $in: ['scheduled', 'in_progress', 'finished'],
+          },
+        },
+        sort: {
+          date: 'desc',
+        },
+      })) as AssemblyEntity[];
 
-      if (!currentAssembly) {
+      if (!assemblies.length) {
         return {
           assemblies: [],
           generatedAt: new Date().toISOString(),
@@ -461,11 +806,14 @@ export default factories.createCoreService('api::vote.vote', ({ strapi }) => {
         };
       }
 
+      const assemblyIds = assemblies.map((assembly) => assembly.id);
       const agendaItems = (await strapi.entityService.findMany('api::agenda-item.agenda-item', {
         fields: ['id', 'title', 'description', 'status', 'requiresSpecialMajority', 'survey_schema'],
         filters: {
           assembly: {
-            id: currentAssembly.id,
+            id: {
+              $in: assemblyIds,
+            },
           },
         },
         populate: {
@@ -480,6 +828,24 @@ export default factories.createCoreService('api::vote.vote', ({ strapi }) => {
           id: 'asc',
         },
       })) as AgendaItemListEntity[];
+      const agendaItemsByAssembly = new Map<number, AgendaItemListEntity[]>();
+
+      for (const agendaItem of agendaItems) {
+        const assemblyId = agendaItem.assembly?.id;
+
+        if (!assemblyId) {
+          continue;
+        }
+
+        const existingAgendaItems = agendaItemsByAssembly.get(assemblyId);
+
+        if (existingAgendaItems) {
+          existingAgendaItems.push(agendaItem);
+          continue;
+        }
+
+        agendaItemsByAssembly.set(assemblyId, [agendaItem]);
+      }
 
       const agendaItemIds = agendaItems.map((item) => item.id);
 
@@ -575,136 +941,334 @@ export default factories.createCoreService('api::vote.vote', ({ strapi }) => {
         });
       }
 
-      const surveys = agendaItems.map((agendaItem) => {
-        const voteSummary = getOfficialVoteSummary(
-          agendaItem.survey_schema,
-          agendaItem.title ?? `Encuesta ${agendaItem.id}`,
-          agendaItem.description ?? null
-        );
-        const normalizedStatus = getResidentAgendaStatus(
-          agendaItem.status,
-          currentAssembly.status ?? agendaItem.assembly?.status
-        );
-        const participation = participationByAgendaItem.get(agendaItem.id);
-        const options = (agendaItem.vote_options ?? [])
-          .map((option) => {
-            const totals = voteTotalsByOptionId.get(option.id);
-
-            return {
-              id: option.id,
-              text: option.text ?? `Opcion ${option.id}`,
-              totalVotes: totals?.totalVotes ?? 0,
-              totalWeight: totals?.totalWeight ?? 0,
-            };
-          })
-          .sort((left, right) => {
-            if (right.totalWeight !== left.totalWeight) {
-              return right.totalWeight - left.totalWeight;
-            }
-
-            if (right.totalVotes !== left.totalVotes) {
-              return right.totalVotes - left.totalVotes;
-            }
-
-            return left.text.localeCompare(right.text);
-          });
-
-        const totalVotes = participation?.totalVotes ?? 0;
-        const totalWeight = participation?.totalWeight ?? 0;
-        const leadingOption = options[0] ?? null;
-        const secondOption = options[1] ?? null;
-        const hasTie =
-          Boolean(leadingOption) &&
-          Boolean(secondOption) &&
-          leadingOption.totalWeight === secondOption.totalWeight &&
-          leadingOption.totalVotes === secondOption.totalVotes;
-        const winningShareByWeight =
-          leadingOption && totalWeight > 0
-            ? (leadingOption.totalWeight / totalWeight) * 100
-            : 0;
-        const meetsRequiredThreshold =
-          !agendaItem.requiresSpecialMajority || winningShareByWeight >= 70;
-
-        let resultStatus: ResultStatus = 'no_votes';
-
-        if (totalVotes > 0 && hasTie) {
-          resultStatus = 'tie';
-        } else if (totalVotes > 0 && normalizedStatus === 'closed') {
-          resultStatus = meetsRequiredThreshold ? 'closed' : 'closed_without_threshold';
-        } else if (totalVotes > 0) {
-          resultStatus = meetsRequiredThreshold ? 'leading' : 'leading_without_threshold';
-        }
-
-        const normalizedOptions = options.map((option) => {
-          const shareByVotes = totalVotes > 0 ? (option.totalVotes / totalVotes) * 100 : 0;
-          const shareByWeight = totalWeight > 0 ? (option.totalWeight / totalWeight) * 100 : 0;
-          const isWinner =
-            Boolean(leadingOption) &&
-            !hasTie &&
-            option.id === leadingOption.id &&
-            option.totalVotes > 0;
+      const assembliesWithSurveys = assemblies
+        .map((assembly) => {
+          const assemblyAgendaItems = agendaItemsByAssembly.get(assembly.id) ?? [];
+          const surveys = buildSurveysForAssembly(
+            assembly,
+            assemblyAgendaItems,
+            voteTotalsByOptionId,
+            participationByAgendaItem
+          );
+          const assemblyTotalVotes = surveys.reduce(
+            (sum, survey) => sum + survey.summary.totalVotes,
+            0
+          );
+          const assemblyTotalWeight = surveys.reduce(
+            (sum, survey) => sum + survey.summary.totalWeight,
+            0
+          );
 
           return {
-            ...option,
-            isWinner,
-            shareByVotes,
-            shareByWeight,
-          };
-        });
-
-        const winningOption =
-          normalizedOptions.find((option) => option.isWinner) ?? null;
-
-        return {
-          id: agendaItem.id,
-          options: normalizedOptions,
-          requiresSpecialMajority: Boolean(agendaItem.requiresSpecialMajority),
-          resultStatus,
-          questionDescription: voteSummary.questionDescription,
-          questionTitle: voteSummary.questionTitle,
-          sectionTitle: voteSummary.sectionTitle,
-          status: normalizedStatus,
-          summary: {
-            totalOptions: normalizedOptions.length,
-            totalVotes,
-            totalWeight,
-            winningOptionId: winningOption?.id ?? null,
-          },
-          surveyTitle: agendaItem.title ?? `Encuesta ${agendaItem.id}`,
-          winningOption,
-        };
-      });
-
-      const openSurveys = surveys.filter((survey) => survey.status === 'open').length;
-      const closedSurveys = surveys.filter((survey) => survey.status === 'closed').length;
-      const pendingSurveys = surveys.filter((survey) => survey.status === 'pending').length;
-
-      return {
-        assemblies: [
-          {
-            date: currentAssembly.date ?? null,
-            id: currentAssembly.id,
-            status: currentAssembly.status ?? 'scheduled',
+            date: assembly.date ?? null,
+            id: assembly.id,
+            status: assembly.status ?? 'scheduled',
             summary: {
               totalSurveys: surveys.length,
-              totalVotes,
-              totalWeight,
+              totalVotes: assemblyTotalVotes,
+              totalWeight: assemblyTotalWeight,
             },
             surveys,
-            title: currentAssembly.title ?? 'Asamblea actual',
-          },
-        ],
+            title: assembly.title ?? `Asamblea ${assembly.id}`,
+          };
+        })
+        .filter((assembly) => assembly.surveys.length > 0);
+
+      const allSurveys = assembliesWithSurveys.flatMap((assembly) => assembly.surveys);
+      const openSurveys = allSurveys.filter((survey) => survey.status === 'open').length;
+      const closedSurveys = allSurveys.filter((survey) => survey.status === 'closed').length;
+      const pendingSurveys = allSurveys.filter((survey) => survey.status === 'pending').length;
+      const totalSurveys = allSurveys.length;
+      const totalVotesAcrossAssemblies = assembliesWithSurveys.reduce(
+        (sum, assembly) => sum + assembly.summary.totalVotes,
+        0
+      );
+      const totalWeightAcrossAssemblies = assembliesWithSurveys.reduce(
+        (sum, assembly) => sum + assembly.summary.totalWeight,
+        0
+      );
+
+      return {
+        assemblies: assembliesWithSurveys,
         generatedAt: new Date().toISOString(),
         summary: {
           closedSurveys,
           distinctVoters: distinctVoters.size,
           openSurveys,
           pendingSurveys,
-          totalAssemblies: 1,
-          totalSurveys: surveys.length,
-          totalVotes,
-          totalWeight,
+          totalAssemblies: assembliesWithSurveys.length,
+          totalSurveys,
+          totalVotes: totalVotesAcrossAssemblies,
+          totalWeight: totalWeightAcrossAssemblies,
         },
+      };
+    },
+
+    async getResidentHistory(userId: number) {
+      const user = (await strapi.entityService.findOne('plugin::users-permissions.user', userId, {
+        fields: ['id', 'NombreCompleto', 'UnidadPrivada', 'Coeficiente', 'EstadoCartera', 'username'],
+      })) as UserEntity | null;
+
+      if (!user) {
+        throw new NotFoundError('No se encontro el copropietario autenticado.');
+      }
+
+      const targetAssembly = await findLatestFinishedAssemblyForResident(userId);
+
+      if (!targetAssembly) {
+        return {
+          assembly: null,
+          declarations: [],
+          legalAcceptance: null,
+          participation: null,
+          resident: {
+            id: user.id,
+            name: normalizeResidentName(user),
+            unit: normalizeResidentUnit(user.UnidadPrivada ?? user.username ?? ''),
+          },
+          votes: [],
+        };
+      }
+
+      const accessMode = await getResidentAccessModeForAssembly(strapi, {
+        assemblyId: targetAssembly.id,
+        userId,
+      });
+      const [participationState, representationState, attendance, voteRows, declarationRows, legalAcceptance] =
+        await Promise.all([
+        getResidentAssemblyParticipationState(strapi, {
+          assemblyId: targetAssembly.id,
+          userId,
+        }),
+        getResidentRepresentationState(strapi, {
+          accessMode,
+          assemblyId: targetAssembly.id,
+          user,
+        }),
+        strapi.db.query('api::attendance.attendance').findOne({
+          where: {
+            assembly: targetAssembly.id,
+            user: userId,
+          },
+        }) as Promise<ResidentHistoryAttendanceRow | null>,
+        strapi.db.query('api::vote.vote').findMany({
+          where: {
+            user: userId,
+            agenda_item: {
+              assembly: targetAssembly.id,
+            },
+          },
+          orderBy: {
+            id: 'asc',
+          },
+          populate: {
+            agenda_item: {
+              fields: ['id', 'title', 'description', 'status', 'survey_schema'],
+            },
+            vote_option: {
+              fields: ['id', 'text'],
+            },
+          },
+        }) as Promise<
+          Array<{
+            agenda_item?: {
+              description?: string | null;
+              id: number;
+              status?: 'pending' | 'open' | 'closed' | null;
+              survey_schema?: Record<string, unknown> | null;
+              title?: string | null;
+            } | null;
+            createdAt?: string | null;
+            id: number;
+            mechanism?: VoteMechanism | null;
+            vote_option?: { id: number; text?: string | null } | null;
+            weight?: number | string | null;
+          }>
+        >,
+        strapi.db.query('api::proxy-authorization.proxy-authorization').findMany({
+          where: {
+            assembly: targetAssembly.id,
+            submitted_by: userId,
+          },
+          orderBy: {
+            id: 'asc',
+          },
+          populate: {
+            represented_user: {
+              fields: ['id', 'NombreCompleto', 'UnidadPrivada', 'username'],
+            },
+            revoked_by: {
+              fields: ['id', 'NombreCompleto', 'UnidadPrivada', 'username'],
+            },
+            support_document: true,
+          },
+        }) as Promise<ProxyAuthorizationEntity[]>,
+        strapi.db.query('api::legal-acceptance.legal-acceptance').findOne({
+          where: {
+            context: 'resident_login',
+            user: userId,
+          },
+          orderBy: [{ accepted_at: 'desc' }, { id: 'desc' }],
+        }) as Promise<LegalAcceptanceEntity | null>,
+        ]);
+
+      const votesByAgendaId = new Map<
+        number,
+        {
+          agendaId: number;
+          agendaStatus: 'pending' | 'open' | 'closed';
+          mechanism: VoteMechanism;
+          optionLabels: Set<string>;
+          questionDescription: string | null;
+          questionTitle: string;
+          recordedAt: string | null;
+          sectionTitle: string | null;
+          surveyTitle: string;
+          voteIds: number[];
+          weight: number;
+        }
+      >();
+
+      for (const vote of voteRows) {
+        if (!vote.agenda_item?.id) {
+          continue;
+        }
+
+        const agendaId = vote.agenda_item.id;
+        const existingVote = votesByAgendaId.get(agendaId);
+        const voteSummary = getOfficialVoteSummary(
+          vote.agenda_item.survey_schema,
+          vote.agenda_item.title ?? `Encuesta ${agendaId}`,
+          vote.agenda_item.description ?? null
+        );
+        const optionLabel =
+          vote.vote_option?.text ?? (vote.vote_option?.id ? `Opcion ${vote.vote_option.id}` : '');
+        const voteWeight = parseNumericValue(vote.weight);
+
+        if (existingVote) {
+          if (optionLabel) {
+            existingVote.optionLabels.add(optionLabel);
+          }
+
+          if (!existingVote.recordedAt && vote.createdAt) {
+            existingVote.recordedAt = vote.createdAt;
+          }
+
+          if (!existingVote.weight && voteWeight > 0) {
+            existingVote.weight = voteWeight;
+          }
+
+          existingVote.voteIds.push(vote.id);
+          continue;
+        }
+
+        votesByAgendaId.set(agendaId, {
+          agendaId,
+          agendaStatus: getResidentAgendaStatus(vote.agenda_item.status ?? undefined, targetAssembly.status),
+          mechanism: vote.mechanism ?? 'electronic',
+          optionLabels: new Set(optionLabel ? [optionLabel] : []),
+          questionDescription: voteSummary.questionDescription,
+          questionTitle: voteSummary.questionTitle,
+          recordedAt: vote.createdAt ?? null,
+          sectionTitle: voteSummary.sectionTitle,
+          surveyTitle: vote.agenda_item.title ?? `Encuesta ${agendaId}`,
+          voteIds: [vote.id],
+          weight: voteWeight,
+        });
+      }
+
+      const votes = Array.from(votesByAgendaId.values())
+        .map((vote) => ({
+          agendaItemId: vote.agendaId,
+          agendaStatus: vote.agendaStatus,
+          mechanism: VOTE_MECHANISM_LABELS[vote.mechanism] ?? vote.mechanism,
+          questionDescription: vote.questionDescription,
+          questionTitle: vote.questionTitle,
+          recordedAt: vote.recordedAt,
+          sectionTitle: vote.sectionTitle,
+          selectedOptions: Array.from(vote.optionLabels),
+          surveyTitle: vote.surveyTitle,
+          voteIds: vote.voteIds,
+          weight: vote.weight,
+        }))
+        .sort((left, right) => left.agendaItemId - right.agendaItemId);
+
+      const declarations = declarationRows.map((declaration) => {
+        const support = serializeSupportDocument(declaration.support_document);
+        const supportUrl = buildAbsoluteUrl(support?.url ?? null);
+
+        return {
+          id: declaration.id,
+          registeredAt: declaration.createdAt ?? null,
+          representedResident: declaration.represented_user
+            ? {
+                id: declaration.represented_user.id,
+                name: normalizeResidentName(declaration.represented_user),
+                unit: normalizeResidentUnit(
+                  declaration.represented_user.UnidadPrivada ??
+                    declaration.represented_user.username ??
+                    ''
+                ),
+              }
+            : null,
+          revokedAt: declaration.revoked_at ?? null,
+          revokedBy: declaration.revoked_by
+            ? {
+                id: declaration.revoked_by.id,
+                name: normalizeResidentName(declaration.revoked_by),
+                unit: normalizeResidentUnit(
+                  declaration.revoked_by.UnidadPrivada ?? declaration.revoked_by.username ?? ''
+                ),
+              }
+            : null,
+          revokedReason: declaration.revoked_reason?.trim() || null,
+          status: declaration.status ?? 'submitted',
+          support: support
+            ? {
+                ...support,
+                url: supportUrl,
+              }
+            : null,
+        };
+      });
+
+      return {
+        assembly: {
+          date: targetAssembly.date ?? null,
+          id: targetAssembly.id,
+          status: targetAssembly.status ?? 'finished',
+          title: targetAssembly.title ?? `Asamblea ${targetAssembly.id}`,
+        },
+        declarations,
+        legalAcceptance: legalAcceptance
+          ? {
+              acceptedAt: legalAcceptance.accepted_at ?? null,
+              context: legalAcceptance.context ?? 'resident_login',
+              documentHash: legalAcceptance.document_hash ?? null,
+              documentKey: legalAcceptance.document_key ?? null,
+              documentVersion: legalAcceptance.document_version ?? null,
+              id: legalAcceptance.id,
+              ipAddress: legalAcceptance.ip_address ?? null,
+              userAgent: legalAcceptance.user_agent ?? null,
+            }
+          : null,
+        participation: {
+          accessMode,
+          canCastVotes: representationState.canProceedToSurveys,
+          checkInTime: attendance?.checkInTime ?? null,
+          delegatedBy: representationState.delegatedBy,
+          hasCastVotes: participationState.hasCastVotes,
+          representationLocked: participationState.representationLocked,
+          representedResidents: representationState.externalResidents,
+          totalHomesRepresented: representationState.totalHomesRepresented,
+          totalWeightRepresented: representationState.totalWeightRepresented,
+        },
+        resident: {
+          id: user.id,
+          name: normalizeResidentName(user),
+          unit: normalizeResidentUnit(user.UnidadPrivada ?? user.username ?? ''),
+        },
+        votes,
       };
     },
 
