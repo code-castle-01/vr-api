@@ -128,6 +128,7 @@ const AUTHENTICATED_ACTIONS = [
 ];
 
 const ADMIN_ACTIONS = [
+  'api::assembly.assembly.adminExhaustiveReport',
   'api::legal-acceptance.legal-acceptance.adminList',
   'api::meeting-document.meeting-document.adminList',
   'api::meeting-document.meeting-document.adminOne',
