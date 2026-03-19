@@ -84,6 +84,9 @@ export default ({ env }) => [
   'strapi::query',
   'strapi::body',
   'strapi::session',
+  {
+    resolve: './src/middlewares/resident-access-guard',
+  },
   'strapi::favicon',
   'strapi::public',
 ];

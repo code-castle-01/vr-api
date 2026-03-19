@@ -12,6 +12,11 @@ import {
   upsertResidentAttendance,
 } from '../../../utils/resident-session';
 import { RESIDENT_ACCESS_LEGAL_KEY } from '../../../utils/resident-legal';
+import {
+  ensureResidentSessionIsActive,
+  getResidentAccessConfig,
+  updateResidentAccessConfig,
+} from '../../../utils/resident-access';
 
 const ACCOUNT_FIELDS: Array<
   | 'id'
@@ -46,6 +51,16 @@ type ResidentLoginBody = {
   unit?: string;
 };
 
+type ResidentAccessConfigBody = {
+  residentLoginDisabledMessage?: string;
+  residentLoginEnabled?: boolean;
+};
+
+type AdminLoginBody = {
+  identifier?: string;
+  password?: string;
+};
+
 type LoginResidentUser = {
   blocked?: boolean | null;
   confirmed?: boolean | null;
@@ -59,6 +74,11 @@ type LoginResidentUser = {
   } | null;
   username?: string | null;
   UnidadPrivada?: string | null;
+};
+
+type AuthenticatedUserWithRole = {
+  id: number;
+  role?: LoginResidentUser['role'];
 };
 
 const PASSWORD_HASH_ROUNDS = 10;
@@ -79,6 +99,36 @@ const getClientIpAddress = (ctx: Context) => {
   }
 
   return ctx.request.ip ?? '';
+};
+
+const getAuthenticatedUserWithRole = async (
+  userId: number
+): Promise<AuthenticatedUserWithRole | null> =>
+  ((await strapi.entityService.findOne(
+    'plugin::users-permissions.user',
+    Number(userId),
+    {
+      fields: ['id'],
+      populate: ACCOUNT_POPULATE,
+    }
+  )) as AuthenticatedUserWithRole | null) ?? null;
+
+const requireAdminUser = async (ctx: Context) => {
+  const userId = ctx.state.user?.id;
+
+  if (!userId) {
+    ctx.unauthorized('Debes iniciar sesion para realizar esta accion.');
+    return null;
+  }
+
+  const authenticatedUser = await getAuthenticatedUserWithRole(Number(userId));
+
+  if (!authenticatedUser || !isAdminRole(authenticatedUser.role)) {
+    ctx.forbidden('Solo un administrador puede realizar esta accion.');
+    return null;
+  }
+
+  return authenticatedUser;
 };
 
 type LegalAcceptanceService = {
@@ -125,6 +175,120 @@ type LegalAcceptanceService = {
 };
 
 export default {
+  async adminLogin(ctx: Context) {
+    const { identifier, password } = (ctx.request.body ?? {}) as AdminLoginBody;
+    const normalizedIdentifier =
+      typeof identifier === 'string' ? identifier.trim() : '';
+
+    if (!normalizedIdentifier || typeof password !== 'string' || !password) {
+      return ctx.badRequest(
+        'Debes ingresar tu usuario o correo administrativo y la contraseña.'
+      );
+    }
+
+    const user = (await strapi.query('plugin::users-permissions.user').findOne({
+      populate: ['role'],
+      where: {
+        provider: 'local',
+        $or: [
+          { email: normalizedIdentifier.toLowerCase() },
+          { username: normalizedIdentifier },
+        ],
+      },
+    })) as LoginResidentUser | null;
+
+    if (!user || !user.password || !isAdminRole(user.role)) {
+      return ctx.forbidden('Solo un administrador puede iniciar sesion aqui.');
+    }
+
+    if (user.confirmed === false) {
+      return ctx.badRequest('La cuenta administrativa no esta confirmada.');
+    }
+
+    if (user.blocked) {
+      return ctx.forbidden('La cuenta administrativa fue bloqueada.');
+    }
+
+    const userService = strapi.plugin('users-permissions').service('user') as {
+      validatePassword: (password: string, hash: string) => Promise<boolean>;
+    };
+    const passwordMatches =
+      user.password === password ||
+      (isHashedPassword(user.password)
+        ? await userService.validatePassword(password, user.password)
+        : false);
+
+    if (!passwordMatches) {
+      return ctx.badRequest('La contraseña administrativa no es valida.');
+    }
+
+    const jwt = getJwtService(strapi).issue({
+      id: user.id,
+    });
+
+    const account = await strapi.entityService.findOne('plugin::users-permissions.user', user.id, {
+      fields: ACCOUNT_FIELDS,
+      populate: ACCOUNT_POPULATE,
+    });
+
+    ctx.body = {
+      jwt,
+      user: account,
+    };
+  },
+
+  async residentAccessConfig(ctx: Context) {
+    const residentAccessConfig = await getResidentAccessConfig(strapi);
+
+    ctx.body = {
+      residentLoginDisabledMessage:
+        residentAccessConfig.residentLoginDisabledMessage,
+      residentLoginEnabled: residentAccessConfig.residentLoginEnabled,
+    };
+  },
+
+  async adminResidentAccessConfig(ctx: Context) {
+    const authenticatedUser = await requireAdminUser(ctx);
+
+    if (!authenticatedUser) {
+      return;
+    }
+
+    ctx.body = await getResidentAccessConfig(strapi);
+  },
+
+  async updateAdminResidentAccessConfig(ctx: Context) {
+    const authenticatedUser = await requireAdminUser(ctx);
+
+    if (!authenticatedUser) {
+      return;
+    }
+
+    const body = (ctx.request.body ?? {}) as ResidentAccessConfigBody;
+
+    if (
+      body.residentLoginEnabled !== undefined &&
+      typeof body.residentLoginEnabled !== 'boolean'
+    ) {
+      return ctx.badRequest(
+        'El estado del portal residente debe enviarse como verdadero o falso.'
+      );
+    }
+
+    if (
+      body.residentLoginDisabledMessage !== undefined &&
+      typeof body.residentLoginDisabledMessage !== 'string'
+    ) {
+      return ctx.badRequest('El mensaje de cierre debe enviarse como texto.');
+    }
+
+    ctx.body = await updateResidentAccessConfig(strapi, {
+      residentLoginDisabledMessage: body.residentLoginDisabledMessage,
+      residentLoginEnabled: body.residentLoginEnabled,
+      updatedByUserId: authenticatedUser.id,
+    });
+  },
+
   async residentLegal(ctx: Context) {
     const legalAcceptanceService = strapi.service(
       'api::legal-acceptance.legal-acceptance'
@@ -158,6 +322,12 @@ export default {
       return ctx.unauthorized('Debes iniciar sesion para consultar tu cuenta.');
     }
 
+    const residentSessionGuard = await ensureResidentSessionIsActive(strapi, ctx);
+
+    if (residentSessionGuard) {
+      return residentSessionGuard;
+    }
+
     const user = (await strapi.entityService.findOne(
       'plugin::users-permissions.user',
       Number(userId),
@@ -186,6 +356,12 @@ export default {
 
     if (!userId) {
       return ctx.unauthorized('Debes iniciar sesion para actualizar tu cuenta.');
+    }
+
+    const residentSessionGuard = await ensureResidentSessionIsActive(strapi, ctx);
+
+    if (residentSessionGuard) {
+      return residentSessionGuard;
     }
 
     const nextName =
@@ -227,6 +403,13 @@ export default {
       {}) as ResidentLoginBody;
     const normalizedUnit = normalizeResidentUnit(unit ?? '');
     const normalizedAccessMode = normalizeResidentAccessMode(residentAccessMode);
+    const residentAccessConfig = await getResidentAccessConfig(strapi);
+
+    if (!residentAccessConfig.residentLoginEnabled) {
+      return ctx.forbidden(
+        residentAccessConfig.residentLoginDisabledMessage
+      );
+    }
 
     if (!normalizedUnit) {
       return ctx.badRequest('Debes indicar una unidad valida para iniciar sesion.');

@@ -27,6 +27,7 @@ export type ResidentUserEntity = {
   email?: string | null;
   id: number;
   password?: string | null;
+  provider?: string | null;
   role?: ResidentRoleEntity | null;
   username?: string | null;
 };
