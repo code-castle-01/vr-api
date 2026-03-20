@@ -1,5 +1,4 @@
 import { factories } from '@strapi/strapi';
-import { RESIDENT_ACCESS_LEGAL_KEY } from '../../../utils/resident-legal';
 import {
   getAssemblyQuorumSummary,
   isAdminRole,
@@ -23,6 +22,8 @@ type AssemblyEntity = {
 type UserEntity = {
   NombreCompleto?: string | null;
   UnidadPrivada?: string | null;
+  blocked?: boolean | null;
+  confirmed?: boolean | null;
   id: number;
   role?: {
     name?: string | null;
@@ -77,17 +78,6 @@ type AttendanceRow = {
   proxy_user?: UserEntity | null;
   representation_locked?: boolean | null;
   user?: UserEntity | null;
-};
-
-type LegalAcceptanceRow = {
-  accepted_at?: string | null;
-  document_hash?: string | null;
-  document_key?: string | null;
-  document_version?: string | null;
-  id: number;
-  ip_address?: string | null;
-  user?: UserEntity | null;
-  user_agent?: string | null;
 };
 
 type PdfTableColumnStyles = Record<number, Record<string, unknown>>;
@@ -376,6 +366,64 @@ const buildSurveyReports = (agendaItems: AgendaItemEntity[], voteRows: VoteRow[]
   });
 };
 
+const addUnitToSet = (units: Set<string>, rawUnit?: string | null) => {
+  const unit = normalizeResidentUnit(rawUnit ?? '');
+
+  if (unit) {
+    units.add(unit);
+  }
+};
+
+const buildParticipatingUnitSet = (
+  attendances: AttendanceRow[],
+  voteRows: VoteRow[],
+  activePowers: ProxyAuthorizationRow[]
+) => {
+  const participatingUnits = new Set<string>();
+
+  for (const attendance of attendances) {
+    if (!attendance.user || isAdminRole(attendance.user.role)) {
+      continue;
+    }
+
+    addUnitToSet(
+      participatingUnits,
+      attendance.user.UnidadPrivada ?? attendance.user.username ?? ''
+    );
+
+    if (attendance.proxy_user) {
+      addUnitToSet(
+        participatingUnits,
+        attendance.proxy_user.UnidadPrivada ?? attendance.proxy_user.username ?? ''
+      );
+    }
+  }
+
+  for (const voteRow of voteRows) {
+    const voteUser =
+      typeof voteRow.user === 'object' && voteRow.user !== null ? (voteRow.user as UserEntity) : null;
+
+    if (!voteUser || isAdminRole(voteUser.role)) {
+      continue;
+    }
+
+    addUnitToSet(participatingUnits, voteUser.UnidadPrivada ?? voteUser.username ?? '');
+  }
+
+  for (const power of activePowers) {
+    addUnitToSet(
+      participatingUnits,
+      power.submitted_by?.UnidadPrivada ?? power.submitted_by?.username ?? ''
+    );
+    addUnitToSet(
+      participatingUnits,
+      power.represented_user?.UnidadPrivada ?? power.represented_user?.username ?? ''
+    );
+  }
+
+  return participatingUnits;
+};
+
 const buildPdf = (
   assembly: AssemblyEntity,
   generatedAt: string,
@@ -386,7 +434,7 @@ const buildPdf = (
   revokedPowerRows: string[][],
   attendanceRows: string[][],
   quorumRows: string[][],
-  legalRows: string[][]
+  nonParticipatingRows: string[][]
 ) => {
   const pdf = new jsPDF({ compress: true, format: 'a4', orientation: 'landscape', unit: 'pt' });
   const pageWidth = pdf.internal.pageSize.getWidth();
@@ -601,20 +649,20 @@ const buildPdf = (
   drawSection('Quorum');
   drawTable(['Indicador', 'Valor'], quorumRows);
 
-  drawSection('Cumplimiento legal - detalle tecnico');
+  drawSection('Unidades que no registraron participacion en la asamblea');
   drawTable(
-    ['ID', 'Unidad', 'Residente', 'Aceptado', 'Version', 'Hash', 'IP', 'User-Agent'],
-    legalRows.length ? legalRows : [['-', '-', 'Sin registros legales', '-', '-', '-', '-', '-']],
+    ['Usuario ID', 'Unidad', 'Residente', 'Bloqueada', 'Confirmada', 'Observacion'],
+    nonParticipatingRows.length
+      ? nonParticipatingRows
+      : [['-', '-', 'Todas las unidades registraron participacion', '-', '-', '-']],
     {
       columnStyles: {
-        0: { cellWidth: 30 },
-        1: { cellWidth: 50 },
-        2: { cellWidth: 128 },
-        3: { cellWidth: 98 },
-        4: { cellWidth: 62 },
-        5: { cellWidth: 156 },
-        6: { cellWidth: 72 },
-        7: { cellWidth: 178 },
+        0: { cellWidth: 56 },
+        1: { cellWidth: 68 },
+        2: { cellWidth: 182 },
+        3: { cellWidth: 74 },
+        4: { cellWidth: 74 },
+        5: { cellWidth: 300 },
       },
       fontSize: 7.4,
     }
@@ -641,7 +689,7 @@ const buildPdf = (
 
 export default factories.createCoreService('api::assembly.assembly', ({ strapi }) => ({
   async generateExhaustiveReport(assembly: AssemblyEntity) {
-    const [agendaItems, voteRows, powers, attendances, legalAcceptances, quorum] = await Promise.all([
+    const [agendaItems, voteRows, powers, attendances, residentUsers, quorum] = await Promise.all([
       strapi.entityService.findMany('api::agenda-item.agenda-item', {
         fields: ['id', 'title', 'status', 'requiresSpecialMajority'],
         filters: {
@@ -720,22 +768,15 @@ export default factories.createCoreService('api::assembly.assembly', ({ strapi }
           },
         },
       }) as Promise<AttendanceRow[]>,
-      strapi.db.query('api::legal-acceptance.legal-acceptance').findMany({
-        where: {
-          context: 'resident_login',
-        },
-        orderBy: [{ accepted_at: 'desc' }, { id: 'desc' }],
+      strapi.entityService.findMany('plugin::users-permissions.user', {
+        fields: ['id', 'NombreCompleto', 'UnidadPrivada', 'username', 'blocked', 'confirmed'],
         populate: {
-          user: {
-            fields: ['id', 'NombreCompleto', 'UnidadPrivada', 'username'],
-            populate: {
-              role: {
-                fields: ['name', 'type'],
-              },
-            },
+          role: {
+            fields: ['name', 'type'],
           },
         },
-      }) as Promise<LegalAcceptanceRow[]>,
+        sort: [{ UnidadPrivada: 'asc' }, { id: 'asc' }],
+      }) as Promise<UserEntity[]>,
       getAssemblyQuorumSummary(strapi as any, assembly.id),
     ]);
 
@@ -749,6 +790,7 @@ export default factories.createCoreService('api::assembly.assembly', ({ strapi }
 
     const activePowers = powers.filter((power) => power.status !== 'revoked');
     const revokedPowers = powers.filter((power) => power.status === 'revoked');
+    const participatingUnits = buildParticipatingUnitSet(attendances, voteRows, activePowers);
 
     const aggregatedRows = surveyReports.flatMap((survey) =>
       survey.options.map((option) => [
@@ -815,50 +857,6 @@ export default factories.createCoreService('api::assembly.assembly', ({ strapi }
         ),
       ]);
 
-    const legalUsersById = new Map<number, UserEntity>();
-
-    for (const attendance of attendances) {
-      const attendanceUser = attendance.user;
-
-      if (!attendanceUser || isAdminRole(attendanceUser.role)) {
-        continue;
-      }
-
-      legalUsersById.set(attendanceUser.id, attendanceUser);
-    }
-
-    for (const legal of legalAcceptances) {
-      const legalUser = legal.user;
-
-      if (!legalUser || isAdminRole(legalUser.role)) {
-        continue;
-      }
-
-      if (!legalUsersById.has(legalUser.id)) {
-        legalUsersById.set(legalUser.id, legalUser);
-      }
-    }
-
-    const legalByUserId = new Map<number, LegalAcceptanceRow>();
-    const legalRowsWithCurrentKey = legalAcceptances.filter(
-      (legal) => legal.document_key === RESIDENT_ACCESS_LEGAL_KEY
-    );
-    const legalRowsWithLegacyKey = legalAcceptances.filter(
-      (legal) => legal.document_key !== RESIDENT_ACCESS_LEGAL_KEY
-    );
-
-    for (const legalCollection of [legalRowsWithCurrentKey, legalRowsWithLegacyKey]) {
-      for (const legal of legalCollection) {
-        const legalUser = legal.user;
-
-        if (!legalUser || isAdminRole(legalUser.role) || legalByUserId.has(legalUser.id)) {
-          continue;
-        }
-
-        legalByUserId.set(legalUser.id, legal);
-      }
-    }
-
     const quorumRows = [
       ['Casas habilitadas', String(quorum.enabledHomesCount)],
       ['Usuarios con ingreso', String(quorum.loggedUsersCount)],
@@ -867,32 +865,45 @@ export default factories.createCoreService('api::assembly.assembly', ({ strapi }
       ['Total base de casas', String(quorum.totalHomesBase)],
     ].map((row) => row.map((value) => toPdfText(value)));
 
-    const legalRows = Array.from(legalUsersById.values())
+    const residentUsersByUnit = new Map<string, UserEntity>();
+
+    for (const residentUser of residentUsers) {
+      if (isAdminRole(residentUser.role)) {
+        continue;
+      }
+
+      const normalizedUnit = normalizeResidentUnit(residentUser.UnidadPrivada ?? residentUser.username ?? '');
+
+      if (!normalizedUnit) {
+        continue;
+      }
+
+      if (!residentUsersByUnit.has(normalizedUnit)) {
+        residentUsersByUnit.set(normalizedUnit, residentUser);
+      }
+    }
+
+    const nonParticipatingRows = Array.from(residentUsersByUnit.entries())
+      .filter(([unit]) => !participatingUnits.has(unit))
       .sort((left, right) => {
-        const leftUnit = normalizeResidentUnit(left.UnidadPrivada ?? left.username ?? '');
-        const rightUnit = normalizeResidentUnit(right.UnidadPrivada ?? right.username ?? '');
+        const [leftUnit, leftUser] = left;
+        const [rightUnit, rightUser] = right;
 
         if (leftUnit !== rightUnit) {
           return leftUnit.localeCompare(rightUnit, 'es');
         }
 
-        return normalizeResidentName(left).localeCompare(normalizeResidentName(right), 'es');
+        return normalizeResidentName(leftUser).localeCompare(normalizeResidentName(rightUser), 'es');
       })
-      .map((user) => {
-        const legal = legalByUserId.get(user.id);
-
-        return [
-          String(legal?.id ?? '-'),
-          toPdfText(normalizeResidentUnit(user.UnidadPrivada ?? user.username ?? '')),
-          toPdfText(normalizeResidentName(user)),
-          toPdfText(legal ? formatDateTime(legal.accepted_at) : 'Sin aceptacion'),
-          toPdfText(legal?.document_version ?? 'Sin version'),
-          toPdfText(legal?.document_hash ?? 'Sin hash'),
-          toPdfText(legal?.ip_address ?? 'Sin IP'),
-          toPdfText(legal?.user_agent ?? 'Sin User-Agent'),
-        ];
-      });
-    const legalAcceptedCount = legalRows.filter((row) => row[0] !== '-').length;
+      .map(([unit, user]) => [
+        String(user.id),
+        toPdfText(unit),
+        toPdfText(normalizeResidentName(user)),
+        user.blocked ? 'Si' : 'No',
+        user.confirmed === false ? 'No' : 'Si',
+        toPdfText('Sin asistencia, sin voto y sin representacion activa en la asamblea'),
+      ]);
+    const participatingHomesCount = residentUsersByUnit.size - nonParticipatingRows.length;
 
     const summaryRows = [
       ['Asamblea', assembly.title ?? `Asamblea ${assembly.id}`],
@@ -905,8 +916,9 @@ export default factories.createCoreService('api::assembly.assembly', ({ strapi }
       ['Poderes activos', String(activePowers.length)],
       ['Poderes revocados', String(revokedPowers.length)],
       ['Asistencias', String(attendanceRows.length)],
-      ['Registros legales', String(legalAcceptedCount)],
-      ['Usuarios auditados legal', String(legalRows.length)],
+      ['Casas base en BD', String(residentUsersByUnit.size)],
+      ['Casas con participacion', String(participatingHomesCount)],
+      ['Casas sin participacion', String(nonParticipatingRows.length)],
       ['Quorum', quorum.quorumReached ? 'Alcanzado' : 'Pendiente'],
     ].map((row) => row.map((value) => toPdfText(value)));
 
@@ -921,7 +933,7 @@ export default factories.createCoreService('api::assembly.assembly', ({ strapi }
       revokedPowerRows,
       attendanceRows,
       quorumRows,
-      legalRows
+      nonParticipatingRows
     );
 
     return { buffer, filename };
